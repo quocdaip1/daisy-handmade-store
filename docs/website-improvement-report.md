@@ -1208,4 +1208,5 @@ Phase 10 dừng tại SEO, image loading, accessibility và kiểm tra bundle. K
 - Chuyển ảnh sản phẩm mẫu sang public assets để hoạt động sau Vite build và cập nhật record seed đã tồn tại.
 - Redesign trang Liên hệ với hierarchy rõ hơn, panel thông tin, form responsive và trạng thái gửi giữ nguyên contract.
 - Làm mới trang Giới thiệu theo thương hiệu Daisy, thêm câu chuyện, giá trị và CTA responsive; loại bỏ toàn bộ nội dung “Việt Ngọc” cũ.
+- Tối ưu “Danh mục nổi bật” trên điện thoại thành carousel ngang scroll-snap để giảm chiều dài trang và giữ thẻ dễ đọc/chạm.
 - Không thay đổi logic đăng nhập hoặc API contract.
