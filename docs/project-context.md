@@ -250,4 +250,5 @@ Kết quả Final Audit gần nhất:
 - Các ô mật khẩu đăng nhập/đăng ký chỉ hiện nút hiện/ẩn sau khi có nội dung và có nhãn hỗ trợ accessibility.
 - Typography toàn trang dùng system font `Segoe UI` với fallback Tahoma/Arial để dấu và khoảng cách tiếng Việt đồng đều, kể cả tiêu đề.
 - Project đã có cấu hình deploy Render: `render.yaml`, Docker Laravel, PostgreSQL, CORS theo `FRONTEND_URL` và frontend API URL theo `VITE_API_BASE_URL`.
+- Render Free không dùng pre-deploy command; Docker backend chạy migration an toàn trước khi khởi động Apache.
 - Hướng dẫn triển khai nằm tại `docs/deployment-guide.md`.

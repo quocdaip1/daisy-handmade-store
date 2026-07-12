@@ -12,7 +12,6 @@ services:
     dockerContext: ./backend
     dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /up
-    preDeployCommand: php artisan migrate --force
     envVars:
       - key: APP_NAME
         value: Daisy
