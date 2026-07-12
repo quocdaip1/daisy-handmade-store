@@ -1211,4 +1211,5 @@ Phase 10 dừng tại SEO, image loading, accessibility và kiểm tra bundle. K
 - Tối ưu đúng section “Sản phẩm nổi bật” trên điện thoại thành carousel ngang scroll-snap; hoàn tác thay đổi carousel áp nhầm cho danh mục.
 - Cân lại Danh mục nổi bật thành 3×2 trên desktop và nối từng thẻ tới bộ lọc category thực tế trên trang sản phẩm.
 - Đồng bộ Danh mục nổi bật với chiều rộng các section trang chủ, bỏ giới hạn 900px riêng và giữ ảnh/nội dung thẻ nhất quán.
+- Thay ảnh minh họa/fallback của 6 danh mục bằng bộ ảnh trang sức đồng nhất, tối ưu JPG 768×768 và bỏ request homepage products chỉ dùng để suy ảnh.
 - Không thay đổi logic đăng nhập hoặc API contract.

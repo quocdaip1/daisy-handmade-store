@@ -258,4 +258,5 @@ Kết quả Final Audit gần nhất:
 - “Sản phẩm nổi bật” trên mobile dùng carousel ngang scroll-snap với thẻ 82vw; danh mục và trang sản phẩm giữ layout riêng hiện có.
 - Danh mục nổi bật dùng grid cân đối 3×2 desktop, 2 cột tablet, 1 cột mobile; mỗi thẻ mở `/san-pham?category={id}` và trang sản phẩm khởi tạo đúng bộ lọc URL.
 - Danh mục nổi bật dùng cùng chiều rộng section trang chủ: grid 3/2/1 cột theo desktop/tablet/mobile, ảnh `contain` đồng đều và nội dung/CTA thẳng hàng.
+- Sáu danh mục nổi bật dùng bộ ảnh JPG 768×768 riêng tại `frontend/public/categories`; không còn lấy ảnh sản phẩm seed hoặc hiển thị fallback hoa.
 - Hướng dẫn triển khai nằm tại `docs/deployment-guide.md`.

@@ -5,15 +5,23 @@ import { ProductGrid } from '../components/ProductGrid'
 import { SupportBar } from '../components/SupportBar'
 import { CartContext } from '../context/CartContext'
 import { featuredCollection } from '../data/homepage'
-import { fetchBestSellers, fetchHomepageCategories, fetchHomepageProducts, fetchNewArrivals } from '../services/api'
+import { fetchBestSellers, fetchHomepageCategories, fetchNewArrivals } from '../services/api'
 import type { Category } from '../types/category'
 import type { Product } from '../types/product'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
 
+const categoryImages: Record<string, string> = {
+  'hoa-tai': '/categories/hoa-tai.jpg',
+  'kieng-co': '/categories/kieng-co.jpg',
+  nhan: '/categories/nhan.jpg',
+  'phu-kien-ao': '/categories/phu-kien-ao.jpg',
+  'tram-cai-toc': '/categories/tram-cai-toc.jpg',
+  'vong-tay': '/categories/vong-tay.jpg',
+}
+
 function requestHomepageData() {
   return Promise.all([
-    fetchHomepageProducts(),
     fetchHomepageCategories(),
     fetchNewArrivals(),
     fetchBestSellers(),
@@ -22,7 +30,6 @@ function requestHomepageData() {
 
 export function HomePage() {
   const { addToCart } = useContext(CartContext)
-  const [products, setProducts] = useState<Product[]>([])
   const [newArrivals, setNewArrivals] = useState<Product[]>([])
   const [bestSellers, setBestSellers] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -31,8 +38,7 @@ export function HomePage() {
   const loadHomepage = useCallback(async () => {
     setStatus('loading')
     try {
-      const [fetchedProducts, fetchedCategories, fetchedNewArrivals, fetchedBestSellers] = await requestHomepageData()
-      setProducts(fetchedProducts)
+      const [fetchedCategories, fetchedNewArrivals, fetchedBestSellers] = await requestHomepageData()
       setCategories(fetchedCategories)
       setNewArrivals(fetchedNewArrivals)
       setBestSellers(fetchedBestSellers)
@@ -43,8 +49,7 @@ export function HomePage() {
   }, [])
 
   useEffect(() => {
-    void requestHomepageData().then(([fetchedProducts, fetchedCategories, fetchedNewArrivals, fetchedBestSellers]) => {
-      setProducts(fetchedProducts)
+    void requestHomepageData().then(([fetchedCategories, fetchedNewArrivals, fetchedBestSellers]) => {
       setCategories(fetchedCategories)
       setNewArrivals(fetchedNewArrivals)
       setBestSellers(fetchedBestSellers)
@@ -52,7 +57,7 @@ export function HomePage() {
     }).catch(() => { setStatus('error') })
   }, [])
 
-  const categoryImage = (category: Category) => products.find((product) => product.categoryId === category.id)?.images[0]
+  const categoryImage = (category: Category) => categoryImages[category.slug]
   const dataState = (items: Product[], emptyMessage: string) => {
     if (status === 'loading') return <LoadingSkeleton />
     if (status === 'error') return <ErrorState onRetry={() => { void loadHomepage() }} />
