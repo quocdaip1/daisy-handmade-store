@@ -1,0 +1,65 @@
+databases:
+  - name: daisy-database
+    plan: free
+    databaseName: daisy
+    user: daisy
+
+services:
+  - type: web
+    name: daisy-api
+    runtime: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /up
+    preDeployCommand: php artisan migrate --force
+    envVars:
+      - key: APP_NAME
+        value: Daisy
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: daisy-database
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: daisy-database
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: daisy-database
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: daisy-database
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: daisy-database
+          property: password
+
+  - type: web
+    name: daisy-store
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
