@@ -257,5 +257,5 @@ Kết quả Final Audit gần nhất:
 - Trang Giới thiệu đã thay dữ liệu cũ “Việt Ngọc” bằng câu chuyện Daisy Handmade Store, giá trị thương hiệu và thông tin liên hệ hiện tại.
 - “Sản phẩm nổi bật” trên mobile dùng carousel ngang scroll-snap với thẻ 82vw; danh mục và trang sản phẩm giữ layout riêng hiện có.
 - Danh mục nổi bật dùng grid cân đối 3×2 desktop, 2 cột tablet, 1 cột mobile; mỗi thẻ mở `/san-pham?category={id}` và trang sản phẩm khởi tạo đúng bộ lọc URL.
-- Danh mục nổi bật dùng thẻ kiểu Product Card: grid 3 cột rộng tối đa 900px, vùng ảnh 230px với `contain`, nội dung/CTA thẳng hàng; không thay đổi grid “Sản phẩm mới”.
+- Danh mục nổi bật dùng cùng chiều rộng section trang chủ: grid 3/2/1 cột theo desktop/tablet/mobile, ảnh `contain` đồng đều và nội dung/CTA thẳng hàng.
 - Hướng dẫn triển khai nằm tại `docs/deployment-guide.md`.
