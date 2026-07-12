@@ -256,4 +256,5 @@ Kết quả Final Audit gần nhất:
 - Trang Liên hệ có layout responsive hai panel: thông tin cửa hàng nổi bật và form hai cột trên desktop, một cột trên mobile; giữ nguyên Contact API.
 - Trang Giới thiệu đã thay dữ liệu cũ “Việt Ngọc” bằng câu chuyện Daisy Handmade Store, giá trị thương hiệu và thông tin liên hệ hiện tại.
 - “Sản phẩm nổi bật” trên mobile dùng carousel ngang scroll-snap với thẻ 82vw; danh mục và trang sản phẩm giữ layout riêng hiện có.
+- Danh mục nổi bật dùng grid cân đối 3×2 desktop, 2 cột tablet, 1 cột mobile; mỗi thẻ mở `/san-pham?category={id}` và trang sản phẩm khởi tạo đúng bộ lọc URL.
 - Hướng dẫn triển khai nằm tại `docs/deployment-guide.md`.

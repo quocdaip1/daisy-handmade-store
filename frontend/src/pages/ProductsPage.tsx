@@ -1,4 +1,5 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ProductFilter } from '../components/ProductFilter'
 import { ProductGrid } from '../components/ProductGrid'
 import { SearchBar } from '../components/SearchBar'
@@ -18,12 +19,16 @@ const priceRanges: Record<string, Pick<ProductCatalogQuery, 'minPrice' | 'maxPri
 
 export function ProductsPage() {
   const { addToCart } = useContext(CartContext)
+  const [searchParams] = useSearchParams()
   const requestSequence = useRef(0)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all')
+  const [selectedCategory, setSelectedCategory] = useState<number | 'all'>(() => {
+    const category = Number(searchParams.get('category'))
+    return Number.isInteger(category) && category > 0 ? category : 'all'
+  })
   const [priceFilter, setPriceFilter] = useState('all')
   const [sortOrder, setSortOrder] = useState<ProductSort>('featured')
   const [isLoading, setIsLoading] = useState(true)

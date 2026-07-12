@@ -1233,7 +1233,7 @@ textarea {
 .section-link { flex: 0 0 auto; color: var(--text); font-weight: 750; text-decoration: none; border-bottom: 1px solid var(--primary); }
 .section-link span { color: var(--primary-strong); }
 
-.category-showcase { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.category-showcase { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
 .category-tile { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 280px; padding: 1.4rem; overflow: hidden; color: var(--text); text-decoration: none; border: 1px solid var(--border); border-radius: 1.25rem; background: #fff9e7; transition: transform 180ms ease, box-shadow 180ms ease; }
 .category-tile:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
 .category-tile-2, .category-tile-4 { background: var(--white); }.category-tile-3 { background: #f3e5bd; }

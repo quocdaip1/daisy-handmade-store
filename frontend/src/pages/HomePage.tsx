@@ -80,7 +80,7 @@ export function HomePage() {
           <div className="category-showcase">
             {categories.slice(0, 6).map((category, index) => {
               const image = categoryImage(category)
-              return <Link to="/san-pham" key={category.id} className="category-tile">
+              return <Link to={`/san-pham?category=${category.id}`} key={category.id} className="category-tile">
                 <div className="category-image">{image ? <img src={image} alt={`Trang sức thuộc danh mục ${category.name}`} loading="lazy" decoding="async" /> : <span aria-hidden="true">✿</span>}</div>
                 <div><span className="category-number">{String(index + 1).padStart(2, '0')}</span><h3>{category.name}</h3><p>{category.description}</p><span className="category-cta">Khám phá <span aria-hidden="true">→</span></span></div>
               </Link>
