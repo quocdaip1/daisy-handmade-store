@@ -24,7 +24,7 @@ class ProductSeeder extends Seeder
                 'material' => 'Bạc vàng 18K',
                 'color' => 'Vàng đồng',
                 'stock' => 8,
-                'images' => ['/src/assets/jewelry-1.svg'],
+                'images' => ['/products/jewelry-1.svg'],
                 'featured' => true,
                 'is_new' => true,
                 'rating' => 4.8,
@@ -40,7 +40,7 @@ class ProductSeeder extends Seeder
                 'material' => 'Đồng đỏ',
                 'color' => 'Nâu đen',
                 'stock' => 6,
-                'images' => ['/src/assets/jewelry-2.svg'],
+                'images' => ['/products/jewelry-2.svg'],
                 'featured' => true,
                 'is_new' => true,
                 'rating' => 4.9,
@@ -55,7 +55,7 @@ class ProductSeeder extends Seeder
                 'material' => 'Ngọc đỏ và bạc',
                 'color' => 'Đỏ son',
                 'stock' => 10,
-                'images' => ['/src/assets/jewelry-3.svg'],
+                'images' => ['/products/jewelry-3.svg'],
                 'featured' => false,
                 'is_new' => true,
                 'rating' => 4.6,
@@ -63,7 +63,7 @@ class ProductSeeder extends Seeder
         ];
 
         foreach ($products as $product) {
-            Product::firstOrCreate(['slug' => $product['slug']], $product);
+            Product::updateOrCreate(['slug' => $product['slug']], $product);
         }
     }
 }

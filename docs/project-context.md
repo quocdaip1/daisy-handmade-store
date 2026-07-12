@@ -252,4 +252,5 @@ Kết quả Final Audit gần nhất:
 - Project đã có cấu hình deploy Render: `render.yaml`, Docker Laravel, PostgreSQL, CORS theo `FRONTEND_URL` và frontend API URL theo `VITE_API_BASE_URL`.
 - Render Free không dùng pre-deploy command; Docker backend chạy migration an toàn trước khi khởi động Apache.
 - Docker production chạy seeder idempotent sau migration để PostgreSQL mới có danh mục và sản phẩm mẫu mà không tạo bản ghi trùng khi restart.
+- Ảnh sản phẩm seed dùng đường dẫn public `/products/*.svg`; seeder dùng `updateOrCreate` để sửa dữ liệu đã tồn tại trên production.
 - Hướng dẫn triển khai nằm tại `docs/deployment-guide.md`.

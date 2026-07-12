@@ -1205,4 +1205,5 @@ Phase 10 dừng tại SEO, image loading, accessibility và kiểm tra bundle. K
 - Tập trung URL API frontend qua `VITE_API_BASE_URL`, giữ fallback `/api` cho local.
 - Thêm CORS production, Docker Laravel, PostgreSQL Render Blueprint và SPA rewrite.
 - Thêm `docs/deployment-guide.md`; không thay đổi API contract hoặc database schema.
+- Chuyển ảnh sản phẩm mẫu sang public assets để hoạt động sau Vite build và cập nhật record seed đã tồn tại.
 - Không thay đổi logic đăng nhập hoặc API contract.
