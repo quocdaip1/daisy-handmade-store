@@ -25,5 +25,5 @@ Blueprint đặt `plan: free` cho backend và database; Static Site miễn phí 
 
 - Không commit `.env`, `APP_KEY`, password database hoặc secret lên GitHub.
 - Giữ `APP_DEBUG=false` ở production.
-- Free tier không hỗ trợ pre-deploy command; backend Docker tự chạy `php artisan migrate --force` trước Apache mỗi khi container khởi động. Không chạy `migrate:fresh`.
+- Free tier không hỗ trợ pre-deploy command; backend Docker tự chạy migration và seeder idempotent trước Apache mỗi khi container khởi động. Không chạy `migrate:fresh`.
 - Nếu đổi domain frontend, cập nhật đồng thời `FRONTEND_URL` backend.
