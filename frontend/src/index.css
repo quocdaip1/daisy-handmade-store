@@ -733,6 +733,163 @@ textarea {
   font-size: 1.2rem;
 }
 
+.about-page {
+  gap: clamp(3.5rem, 7vw, 6rem);
+  padding: clamp(1rem, 3vw, 2rem) 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.about-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+  min-height: 440px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.about-hero-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: clamp(2rem, 6vw, 4.5rem);
+}
+
+.about-hero h1 {
+  max-width: 760px;
+  margin: 0.7rem 0 1rem;
+  color: var(--text);
+  font-size: clamp(2.5rem, 6vw, 4.6rem);
+  letter-spacing: -0.045em;
+}
+
+.about-hero-copy > p:last-of-type {
+  max-width: 620px;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.about-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.about-mark {
+  position: relative;
+  display: grid;
+  place-content: center;
+  overflow: hidden;
+  background: var(--text);
+  color: var(--primary);
+  text-align: center;
+}
+
+.about-mark::before,
+.about-mark::after {
+  position: absolute;
+  border: 1px solid rgba(244, 180, 0, 0.2);
+  border-radius: 50%;
+  content: '';
+}
+
+.about-mark::before { inset: 14%; }
+.about-mark::after { inset: 26%; }
+.about-mark span { position: relative; z-index: 1; font-size: clamp(7rem, 16vw, 12rem); font-weight: 750; line-height: 0.9; }
+.about-mark small { position: relative; z-index: 1; margin-top: 1rem; color: var(--white); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; }
+
+.about-story {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.75fr) minmax(0, 1.25fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+
+.about-story h2,
+.about-section-heading h2,
+.about-visit h2 {
+  margin-top: 0.5rem;
+  color: var(--text);
+  font-size: clamp(2rem, 4vw, 3rem);
+  letter-spacing: -0.03em;
+}
+
+.about-story-copy {
+  display: grid;
+  gap: 1.2rem;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.about-values {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.about-section-heading {
+  text-align: center;
+}
+
+.about-value-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.about-value-grid article {
+  min-height: 245px;
+  padding: 1.6rem;
+  border: 1px solid var(--border);
+  border-radius: 1.2rem;
+  background: var(--white);
+  box-shadow: 0 12px 34px rgba(48, 36, 31, 0.04);
+}
+
+.about-value-grid span { color: var(--primary-strong); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.1em; }
+.about-value-grid h3 { margin: 2.5rem 0 0.65rem; color: var(--text); font-size: 1.3rem; }
+.about-value-grid p { color: var(--text-muted); line-height: 1.7; }
+
+.about-visit {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  border-radius: 1.4rem;
+  background: var(--accent-soft);
+}
+
+.about-visit > div { max-width: 700px; }
+.about-visit h2 { margin-bottom: 0.65rem; }
+.about-visit > div > p:last-child { color: var(--text-muted); }
+.about-visit .button { flex: 0 0 auto; gap: 0.75rem; }
+
+@media (max-width: 850px) {
+  .about-hero { grid-template-columns: 1fr; }
+  .about-mark { min-height: 260px; }
+  .about-story { grid-template-columns: 1fr; }
+  .about-value-grid { grid-template-columns: 1fr; }
+  .about-value-grid article { min-height: auto; }
+  .about-value-grid h3 { margin-top: 1.5rem; }
+}
+
+@media (max-width: 600px) {
+  .about-page { padding-top: 0.5rem; }
+  .about-hero { border-radius: 1rem; }
+  .about-hero-copy { padding: 1.5rem; }
+  .about-actions, .about-actions .button { width: 100%; }
+  .about-visit { align-items: flex-start; flex-direction: column; border-radius: 1rem; }
+  .about-visit .button { width: 100%; }
+}
+
 @media (max-width: 850px) {
   .contact-layout {
     grid-template-columns: 1fr;

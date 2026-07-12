@@ -254,4 +254,5 @@ Kết quả Final Audit gần nhất:
 - Docker production chạy seeder idempotent sau migration để PostgreSQL mới có danh mục và sản phẩm mẫu mà không tạo bản ghi trùng khi restart.
 - Ảnh sản phẩm seed dùng đường dẫn public `/products/*.svg`; seeder dùng `updateOrCreate` để sửa dữ liệu đã tồn tại trên production.
 - Trang Liên hệ có layout responsive hai panel: thông tin cửa hàng nổi bật và form hai cột trên desktop, một cột trên mobile; giữ nguyên Contact API.
+- Trang Giới thiệu đã thay dữ liệu cũ “Việt Ngọc” bằng câu chuyện Daisy Handmade Store, giá trị thương hiệu và thông tin liên hệ hiện tại.
 - Hướng dẫn triển khai nằm tại `docs/deployment-guide.md`.
