@@ -1487,30 +1487,25 @@ textarea {
 }
 
 @media (max-width: 600px) {
-  .home-skeleton-grid { grid-template-columns: 1fr; }
+  .home-skeleton-grid, .category-showcase { grid-template-columns: 1fr; }
   .home-skeleton-card { min-height: 280px; }
-  .category-showcase {
+  .category-tile { grid-template-rows: 190px auto; min-height: 0; }
+  .best-seller-section .product-grid {
     display: flex;
     gap: 0.8rem;
-    margin-right: -1rem;
-    padding: 0 1rem 0.6rem 0;
+    margin-right: -1.5rem;
+    padding: 0 1.5rem 0.75rem 0;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
-    scroll-padding-inline: 0;
     scroll-snap-type: inline mandatory;
     scrollbar-width: none;
   }
-  .category-showcase::-webkit-scrollbar { display: none; }
-  .category-tile {
+  .best-seller-section .product-grid::-webkit-scrollbar { display: none; }
+  .best-seller-section .product-card {
     flex: 0 0 min(82vw, 310px);
-    grid-template-rows: 155px auto;
-    min-height: 315px;
     scroll-snap-align: start;
     scroll-snap-stop: always;
   }
-  .category-tile > div:last-child { padding: 1rem; }
-  .category-tile h3 { font-size: 1.2rem; }
-  .category-tile p { -webkit-line-clamp: 2; }
   .collection-visual { min-height: 300px; }
   .voucher-section .button { min-height: 3rem; align-items: center; justify-content: center; }
   .site-footer { grid-template-columns: 1fr; }

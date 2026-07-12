@@ -255,5 +255,5 @@ Kết quả Final Audit gần nhất:
 - Ảnh sản phẩm seed dùng đường dẫn public `/products/*.svg`; seeder dùng `updateOrCreate` để sửa dữ liệu đã tồn tại trên production.
 - Trang Liên hệ có layout responsive hai panel: thông tin cửa hàng nổi bật và form hai cột trên desktop, một cột trên mobile; giữ nguyên Contact API.
 - Trang Giới thiệu đã thay dữ liệu cũ “Việt Ngọc” bằng câu chuyện Daisy Handmade Store, giá trị thương hiệu và thông tin liên hệ hiện tại.
-- “Danh mục nổi bật” trên mobile dùng danh sách ngang scroll-snap, thẻ 82vw và ảnh thấp hơn; desktop/tablet vẫn dùng grid.
+- “Sản phẩm nổi bật” trên mobile dùng carousel ngang scroll-snap với thẻ 82vw; danh mục và trang sản phẩm giữ layout riêng hiện có.
 - Hướng dẫn triển khai nằm tại `docs/deployment-guide.md`.
