@@ -1206,4 +1206,5 @@ Phase 10 dừng tại SEO, image loading, accessibility và kiểm tra bundle. K
 - Thêm CORS production, Docker Laravel, PostgreSQL Render Blueprint và SPA rewrite.
 - Thêm `docs/deployment-guide.md`; không thay đổi API contract hoặc database schema.
 - Chuyển ảnh sản phẩm mẫu sang public assets để hoạt động sau Vite build và cập nhật record seed đã tồn tại.
+- Redesign trang Liên hệ với hierarchy rõ hơn, panel thông tin, form responsive và trạng thái gửi giữ nguyên contract.
 - Không thay đổi logic đăng nhập hoặc API contract.

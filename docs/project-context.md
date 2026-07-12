@@ -253,4 +253,5 @@ Kết quả Final Audit gần nhất:
 - Render Free không dùng pre-deploy command; Docker backend chạy migration an toàn trước khi khởi động Apache.
 - Docker production chạy seeder idempotent sau migration để PostgreSQL mới có danh mục và sản phẩm mẫu mà không tạo bản ghi trùng khi restart.
 - Ảnh sản phẩm seed dùng đường dẫn public `/products/*.svg`; seeder dùng `updateOrCreate` để sửa dữ liệu đã tồn tại trên production.
+- Trang Liên hệ có layout responsive hai panel: thông tin cửa hàng nổi bật và form hai cột trên desktop, một cột trên mobile; giữ nguyên Contact API.
 - Hướng dẫn triển khai nằm tại `docs/deployment-guide.md`.
