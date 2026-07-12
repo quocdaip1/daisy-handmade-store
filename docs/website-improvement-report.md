@@ -1210,5 +1210,5 @@ Phase 10 dừng tại SEO, image loading, accessibility và kiểm tra bundle. K
 - Làm mới trang Giới thiệu theo thương hiệu Daisy, thêm câu chuyện, giá trị và CTA responsive; loại bỏ toàn bộ nội dung “Việt Ngọc” cũ.
 - Tối ưu đúng section “Sản phẩm nổi bật” trên điện thoại thành carousel ngang scroll-snap; hoàn tác thay đổi carousel áp nhầm cho danh mục.
 - Cân lại Danh mục nổi bật thành 3×2 trên desktop và nối từng thẻ tới bộ lọc category thực tế trên trang sản phẩm.
-- Hoàn tác thay đổi ảnh danh mục `contain`; cân Product Card trang chủ thành grid 3 cột giống bố cục tham chiếu.
+- Hoàn tác thay đổi nhầm ở Product Grid; áp bố cục tham chiếu cho đúng Danh mục nổi bật với ảnh `contain`, thân thẻ và CTA đồng đều.
 - Không thay đổi logic đăng nhập hoặc API contract.
