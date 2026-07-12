@@ -6,7 +6,7 @@
 - `daisy-api`: backend Laravel chạy bằng Docker.
 - `daisy-database`: PostgreSQL production.
 
-Blueprint đang khóa `plan: free` cho cả ba tài nguyên để phục vụ mục đích demo. Backend miễn phí có thể sleep khi không có truy cập; database miễn phí chịu giới hạn thời gian và dung lượng theo chính sách hiện hành của Render.
+Blueprint đặt `plan: free` cho backend và database; Static Site miễn phí mặc định nên không khai báo `plan`. Backend miễn phí có thể sleep khi không có truy cập; database miễn phí chịu giới hạn thời gian và dung lượng theo chính sách hiện hành của Render.
 
 ## Các bước
 
