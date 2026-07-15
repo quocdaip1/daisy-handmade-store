@@ -1213,3 +1213,18 @@ Phase 10 dừng tại SEO, image loading, accessibility và kiểm tra bundle. K
 - Đồng bộ Danh mục nổi bật với chiều rộng các section trang chủ, bỏ giới hạn 900px riêng và giữ ảnh/nội dung thẻ nhất quán.
 - Thay ảnh minh họa/fallback của 6 danh mục bằng bộ ảnh trang sức đồng nhất, tối ưu JPG 768×768 và bỏ request homepage products chỉ dùng để suy ảnh.
 - Không thay đổi logic đăng nhập hoặc API contract.
+
+## Documentation baseline và Token Optimization – 15/07/2026
+
+- Đã đọc lại source/config chính và các report hiện có để đối chiếu trạng thái dự án; không dùng nội dung giả hoặc giả định chưa có bằng chứng.
+- Tạo `docs/codex-rules.md` làm quy tắc chung về thứ tự nguồn tin, đọc source theo lát cắt, cập nhật report theo delta, bảo vệ thay đổi ngoài phạm vi và dừng đúng phase.
+- Cập nhật `docs/project-context.md` thành snapshot tham chiếu mới nhất; source và kết quả kiểm tra mới luôn được ưu tiên khi report lịch sử đã cũ.
+- Không sửa frontend, backend, API contract hoặc database schema trong đợt tài liệu này.
+
+Kết quả xác minh trực tiếp:
+
+```text
+npm.cmd run lint: passed
+npm.cmd run build: passed (Vite 8.1.4, 65 modules transformed)
+php artisan test: 50/50 tests passed, 265 assertions
+```

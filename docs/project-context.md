@@ -1,6 +1,6 @@
 # Project Context – Daisy Handmade Store
 
-Cập nhật: 11/07/2026
+Cập nhật: 15/07/2026
 
 Tài liệu này là nguồn tham chiếu nhanh trước khi thực hiện các phase tiếp theo. Khi tài liệu khác mâu thuẫn với source hoặc kết quả chạy mới, ưu tiên source hiện tại và kết quả kiểm tra mới nhất.
 
@@ -18,6 +18,7 @@ Daisy Handmade Store là website bán trang sức thủ công lấy cảm hứng
 
 ## 2. Nguồn tham chiếu chính
 
+- `docs/codex-rules.md`: quy tắc tối ưu token, giới hạn phạm vi và quy trình kiểm tra cho các lượt Codex.
 - `docs/website-improvement-report.md`: lịch sử cải tiến frontend.
 - `docs/backend-improvement-report.md`: lịch sử cải tiến backend Phase 1–11.
 - `docs/frontend-backend-integration-plan.md`: mapping Checkout, Order và Account.
@@ -204,10 +205,10 @@ cd D:\Project\backend
 vendor\bin\pint --test
 ```
 
-Kết quả Final Audit gần nhất:
+Kết quả xác minh mới nhất ngày 15/07/2026:
 
 - Frontend lint: passed.
-- Frontend build: passed, 64 modules transformed.
+- Frontend build: passed với Vite 8.1.4, 65 modules transformed.
 - Backend: 50/50 tests passed, 265 assertions.
 
 ## 8. Trạng thái database
