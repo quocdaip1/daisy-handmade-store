@@ -3,19 +3,26 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminBannerRequest;
 use App\Http\Requests\AdminCategoryRequest;
 use App\Http\Requests\AdminCouponRequest;
 use App\Http\Requests\AdminCustomerUpdateRequest;
 use App\Http\Requests\AdminOrderUpdateRequest;
+use App\Http\Requests\AdminPolicyRequest;
 use App\Http\Requests\AdminProductRequest;
+use App\Http\Resources\AdminCategoryResource;
 use App\Http\Resources\AdminProductResource;
-use App\Http\Resources\CategoryResource;
 use App\Http\Resources\OrderResource;
+use App\Models\Banner;
 use App\Models\Category;
+use App\Models\Contact;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Policy;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,8 +32,32 @@ use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
+    public function access(): JsonResponse
+    {
+        return response()->json(['data' => ['allowed' => true]]);
+    }
+
     public function dashboard(): JsonResponse
     {
+        $bestSellers = OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.payment_status', 'paid')
+            ->select(['order_items.product_id', 'order_items.product_name', 'order_items.product_sku'])
+            ->selectRaw('SUM(order_items.quantity) as quantity_sold')
+            ->selectRaw('SUM(order_items.total) as revenue')
+            ->groupBy('order_items.product_id', 'order_items.product_name', 'order_items.product_sku')
+            ->orderByDesc('quantity_sold')
+            ->orderByDesc('revenue')
+            ->limit(5)
+            ->get()
+            ->map(fn (OrderItem $item) => [
+                'product_id' => $item->product_id,
+                'name' => $item->product_name,
+                'sku' => $item->product_sku,
+                'quantity_sold' => (int) $item->quantity_sold,
+                'revenue' => (int) $item->revenue,
+            ]);
+
         return response()->json(['data' => [
             'revenue' => Order::query()->where('payment_status', 'paid')->sum('total'),
             'orders' => Order::query()->count(),
@@ -36,6 +67,7 @@ class AdminController extends Controller
             'published_products' => Product::query()->where('status', 'published')->count(),
             'low_stock_products' => Product::query()->where('status', 'published')->where('stock', '<=', 5)->count(),
             'active_coupons' => Coupon::query()->where('active', true)->count(),
+            'best_sellers' => $bestSellers,
         ]]);
     }
 
@@ -68,8 +100,14 @@ class AdminController extends Controller
 
     public function orders(Request $request): JsonResponse
     {
-        $data = $request->validate(['status' => ['nullable', Rule::in(Order::STATUSES)], 'payment_status' => ['nullable', Rule::in(Order::PAYMENT_STATUSES)], 'per_page' => ['nullable', 'integer', 'min:1', 'max:50']]);
+        $data = $request->validate(['search' => ['nullable', 'string', 'max:100'], 'status' => ['nullable', Rule::in(Order::STATUSES)], 'payment_status' => ['nullable', Rule::in(Order::PAYMENT_STATUSES)], 'per_page' => ['nullable', 'integer', 'min:1', 'max:50']]);
         $orders = Order::query()->with(['items', 'payment', 'user:id,name,email'])
+            ->when($data['search'] ?? null, fn ($query, $search) => $query->where(fn ($query) => $query
+                ->where('number', 'like', "%{$search}%")
+                ->orWhere('customer_name', 'like', "%{$search}%")
+                ->orWhere('customer_email', 'like', "%{$search}%")
+                ->orWhere('customer_phone', 'like', "%{$search}%")
+                ->orWhere('tracking_number', 'like', "%{$search}%")))
             ->when($data['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($data['payment_status'] ?? null, fn ($query, $status) => $query->where('payment_status', $status))
             ->latest()->paginate($request->integer('per_page', 15))->withQueryString();
@@ -82,17 +120,9 @@ class AdminController extends Controller
         return new OrderResource($order->load(['items', 'payment']));
     }
 
-    public function updateOrder(AdminOrderUpdateRequest $request, Order $order): JsonResponse
+    public function updateOrder(AdminOrderUpdateRequest $request, Order $order, OrderService $service): JsonResponse
     {
-        $data = $request->validated();
-        DB::transaction(function () use ($order, $data): void {
-            $order->update($data);
-            if (isset($data['payment_status'])) {
-                $order->payment()->update(['status' => $data['payment_status']]);
-            }
-        });
-
-        return response()->json(['data' => $order->fresh()->load(['items', 'payment'])]);
+        return response()->json(['data' => $service->updateByAdmin($order, $request->validated())]);
     }
 
     public function products(Request $request)
@@ -143,24 +173,26 @@ class AdminController extends Controller
 
     public function categories(): JsonResponse
     {
-        return response()->json(['data' => Category::query()->withCount('products')->orderBy('name')->get()]);
+        return response()->json(['data' => AdminCategoryResource::collection(Category::query()->withCount('products')->orderBy('name')->get())]);
     }
 
-    public function showCategory(Category $category): CategoryResource
+    public function showCategory(Category $category): AdminCategoryResource
     {
-        return new CategoryResource($category);
+        return new AdminCategoryResource($category->loadCount('products'));
     }
 
     public function storeCategory(AdminCategoryRequest $request): JsonResponse
     {
-        return response()->json(['data' => new CategoryResource(Category::create($request->validated()))], 201);
+        $category = Category::create($request->validated())->fresh()->loadCount('products');
+
+        return response()->json(['data' => new AdminCategoryResource($category)], 201);
     }
 
     public function updateCategory(AdminCategoryRequest $request, Category $category): JsonResponse
     {
         $category->update($request->validated());
 
-        return response()->json(['data' => new CategoryResource($category->fresh())]);
+        return response()->json(['data' => new AdminCategoryResource($category->fresh()->loadCount('products'))]);
     }
 
     public function destroyCategory(Category $category): JsonResponse
@@ -206,5 +238,51 @@ class AdminController extends Controller
         }
 
         return response()->json(['message' => 'Voucher đã được ngừng sử dụng.']);
+    }
+
+    public function banners(): JsonResponse
+    {
+        return response()->json(['data' => Banner::query()->orderBy('position')->orderByDesc('id')->get()]);
+    }
+
+    public function storeBanner(AdminBannerRequest $request): JsonResponse
+    {
+        return response()->json(['data' => Banner::create($request->validated())], 201);
+    }
+
+    public function updateBanner(AdminBannerRequest $request, Banner $banner): JsonResponse
+    {
+        $banner->update($request->validated());
+
+        return response()->json(['data' => $banner->fresh()]);
+    }
+
+    public function contacts(Request $request): JsonResponse
+    {
+        $request->validate(['per_page' => ['nullable', 'integer', 'min:1', 'max:50']]);
+
+        return response()->json(Contact::query()->latest()->paginate($request->integer('per_page', 15))->withQueryString());
+    }
+
+    public function showContact(Contact $contact): JsonResponse
+    {
+        return response()->json(['data' => $contact]);
+    }
+
+    public function policies(): JsonResponse
+    {
+        return response()->json(['data' => Policy::query()->latest()->get()]);
+    }
+
+    public function storePolicy(AdminPolicyRequest $request): JsonResponse
+    {
+        return response()->json(['data' => Policy::create($request->validated())], 201);
+    }
+
+    public function updatePolicy(AdminPolicyRequest $request, Policy $policy): JsonResponse
+    {
+        $policy->update($request->validated());
+
+        return response()->json(['data' => $policy->fresh()]);
     }
 }

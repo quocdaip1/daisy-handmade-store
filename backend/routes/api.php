@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AdminSettingsController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
@@ -44,7 +45,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('addresses', AddressController::class)->except(['show']);
 
     Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::get('/access', [AdminController::class, 'access']);
         Route::get('/dashboard', [AdminController::class, 'dashboard']);
+        Route::get('/settings', [AdminSettingsController::class, 'show']);
+        Route::put('/settings', [AdminSettingsController::class, 'update']);
         Route::get('/customers', [AdminController::class, 'customers']);
         Route::get('/customers/{customer}', [AdminController::class, 'showCustomer']);
         Route::put('/customers/{customer}', [AdminController::class, 'updateCustomer']);
@@ -67,6 +71,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/coupons', [AdminController::class, 'storeCoupon']);
         Route::put('/coupons/{coupon}', [AdminController::class, 'updateCoupon']);
         Route::delete('/coupons/{coupon}', [AdminController::class, 'destroyCoupon']);
+        Route::get('/banners', [AdminController::class, 'banners']);
+        Route::post('/banners', [AdminController::class, 'storeBanner']);
+        Route::put('/banners/{banner}', [AdminController::class, 'updateBanner']);
+        Route::get('/contacts', [AdminController::class, 'contacts']);
+        Route::get('/contacts/{contact}', [AdminController::class, 'showContact']);
+        Route::get('/policies', [AdminController::class, 'policies']);
+        Route::post('/policies', [AdminController::class, 'storePolicy']);
+        Route::put('/policies/{policy}', [AdminController::class, 'updatePolicy']);
     });
 });
 

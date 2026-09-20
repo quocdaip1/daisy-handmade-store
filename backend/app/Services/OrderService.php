@@ -115,4 +115,20 @@ class OrderService
             return $order->fresh('items');
         });
     }
+
+    public function updateByAdmin(Order $order, array $data): Order
+    {
+        return DB::transaction(function () use ($order, $data): Order {
+            $paymentStatusProvided = array_key_exists('payment_status', $data);
+            $paymentStatus = $data['payment_status'] ?? null;
+            unset($data['payment_status']);
+
+            $order->update($data);
+            if ($paymentStatusProvided) {
+                $order->payment()->update(['status' => $paymentStatus]);
+            }
+
+            return $order->fresh()->load(['items', 'payment']);
+        });
+    }
 }

@@ -11,6 +11,11 @@ class Category extends Model
         'name',
         'slug',
         'description',
+        'active',
+    ];
+
+    protected $casts = [
+        'active' => 'boolean',
     ];
 
     public function products(): HasMany

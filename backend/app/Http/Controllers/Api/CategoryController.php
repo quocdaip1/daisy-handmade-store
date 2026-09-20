@@ -11,11 +11,13 @@ class CategoryController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        return CategoryResource::collection(Category::query()->orderBy('name')->get());
+        return CategoryResource::collection(Category::query()->where('active', true)->orderBy('name')->get());
     }
 
     public function show(Category $category): CategoryResource
     {
+        abort_unless($category->active, 404);
+
         return new CategoryResource($category);
     }
 }

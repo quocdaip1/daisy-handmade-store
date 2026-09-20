@@ -82,7 +82,9 @@ class ProductApiTest extends TestCase
             ->assertOk()->assertJsonPath('data.0.id', $related->id);
         $this->getJson('/api/products/new-arrivals')->assertOk()->assertJsonPath('data.0.id', $related->id);
         $this->getJson('/api/products/best-sellers')->assertOk()->assertJsonPath('data.0.id', $related->id);
-        $this->getJson('/api/categories')->assertOk()->assertJsonPath('data.0.slug', $category->slug);
+        $this->getJson('/api/categories')->assertOk()
+            ->assertJsonPath('data.0.slug', $category->slug)
+            ->assertJsonMissingPath('data.0.active');
         $this->getJson("/api/categories/{$category->slug}")->assertOk()->assertJsonPath('data.id', $category->id);
     }
 

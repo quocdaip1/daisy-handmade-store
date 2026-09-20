@@ -17,6 +17,7 @@ class AdminCustomerUpdateRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'min:2', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('customer'))],
+            'password' => ['prohibited'],
         ];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\StoreSetting;
 use Illuminate\Validation\ValidationException;
 
 class PaymentService
@@ -37,7 +38,7 @@ class PaymentService
 
     private function bankTransferMetadata(Order $order): array
     {
-        $config = config('payments.bank_transfer');
+        $config = StoreSetting::query()->first()?->bank_account ?? config('payments.bank_transfer');
         foreach (['bank_name', 'account_number', 'account_owner', 'transfer_prefix'] as $field) {
             if (blank($config[$field] ?? null)) {
                 throw ValidationException::withMessages([

@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class AdminCategoryRequest extends FormRequest
+class AdminBannerRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -15,9 +15,10 @@ class AdminCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', Rule::unique('categories', 'slug')->ignore($this->route('category'))],
-            'description' => ['nullable', 'string', 'max:3000'],
+            'title' => ['required', 'string', 'max:255'],
+            'image' => ['required', 'string', 'max:2048'],
+            'link' => ['nullable', 'string', 'max:2048'],
+            'position' => ['required', 'integer', Rule::in([0, 1])],
             'active' => ['sometimes', 'boolean'],
         ];
     }
