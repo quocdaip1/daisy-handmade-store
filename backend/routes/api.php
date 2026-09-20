@@ -21,7 +21,6 @@ Route::get('/products/{slug}', [ProductController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category:slug}', [CategoryController::class, 'show']);
 Route::post('/coupons/validate', [CouponController::class, 'validateCoupon']);
-Route::post('/shipping/quote', [CommerceController::class, 'shipping']);
 Route::post('/contacts', [CommerceController::class, 'contact'])->middleware('throttle:5,1');
 Route::get('/policies', [CommerceController::class, 'policies']);
 Route::get('/policies/{policy:slug}', [CommerceController::class, 'policy']);

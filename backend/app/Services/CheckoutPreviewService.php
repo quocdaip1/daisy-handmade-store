@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Address;
 use App\Models\Product;
-use App\Models\ShippingMethod;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
@@ -37,17 +36,6 @@ class CheckoutPreviewService
             ? $this->coupons->validate($data['coupon_code'], $subtotal, $user)
             : null;
         $discount = $coupon?->discount($subtotal) ?? 0;
-        $shipping = ShippingMethod::query()
-            ->whereKey($data['shipping_method_id'])
-            ->where('active', true)
-            ->first();
-
-        if (! $shipping) {
-            throw ValidationException::withMessages(['shipping_method_id' => 'Phương thức vận chuyển không hợp lệ.']);
-        }
-
-        $shippingFee = $shipping->quote($subtotal - $discount);
-
         return [
             'items' => $items->map(fn ($item) => [
                 'product_id' => $item->product_id,
@@ -57,16 +45,11 @@ class CheckoutPreviewService
                 'line_total' => $item->product->price * $item->quantity,
             ])->values(),
             'address' => $address,
-            'shipping_method' => [
-                'id' => $shipping->id,
-                'code' => $shipping->code,
-                'name' => $shipping->name,
-            ],
             'coupon' => $coupon ? ['code' => $coupon->code] : null,
             'subtotal' => $subtotal,
             'discount' => $discount,
-            'shipping_fee' => $shippingFee,
-            'grand_total' => $subtotal - $discount + $shippingFee,
+            'shipping_fee' => 0,
+            'grand_total' => $subtotal - $discount,
         ];
     }
 

@@ -35,7 +35,7 @@ class OrderApiTest extends TestCase
             ->assertJsonPath('order.items.0.product_id', $product->id);
 
         $this->assertSame(3, $product->fresh()->stock);
-        $this->assertDatabaseHas('orders', ['user_id' => $user->id, 'status' => 'pending', 'payment_status' => 'unpaid']);
+        $this->assertDatabaseHas('orders', ['user_id' => $user->id, 'status' => 'pending', 'payment_method' => 'bank_transfer', 'payment_status' => 'pending_verification', 'shipping_method_id' => null, 'shipping_fee' => 0]);
         $this->assertDatabaseMissing('cart_items', ['user_id' => $user->id]);
     }
 

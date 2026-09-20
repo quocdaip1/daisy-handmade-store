@@ -47,7 +47,6 @@ export function CartPage() {
             <div><span>Số lượng</span><strong>{totalItems} món</strong></div>
             <div><span>Tạm tính theo giỏ hàng</span><strong>{formatCurrency(totalPrice)}</strong></div>
             <div><span>Ưu đãi</span><strong>Xác nhận ở bước sau</strong></div>
-            <div><span>Phí vận chuyển</span><strong>Xác nhận ở bước sau</strong></div>
           </div>
           <div className="summary-total"><span>Tạm tính</span><div><strong>{formatCurrency(totalPrice)}</strong><small>Chưa phải tổng thanh toán cuối cùng</small></div></div>
           <Link to="/thanh-toan" className="button button-primary summary-checkout-button">Tiến hành thanh toán <span aria-hidden="true">→</span></Link>

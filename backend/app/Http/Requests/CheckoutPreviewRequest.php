@@ -28,7 +28,7 @@ class CheckoutPreviewRequest extends FormRequest
             'address.city' => ['required_without:address_id', 'string', 'max:100'],
             'address.district' => ['required_without:address_id', 'string', 'max:100'],
             'address.address' => ['required_without:address_id', 'string', 'max:500'],
-            'shipping_method_id' => ['required', 'integer', 'exists:shipping_methods,id'],
+            'shipping_method_id' => ['prohibited'],
             'coupon_code' => ['nullable', 'string', 'max:50'],
             'items' => ['nullable', 'array', 'min:1', 'max:50'],
             'items.*.product_id' => ['required_with:items', 'integer', 'distinct', 'exists:products,id'],

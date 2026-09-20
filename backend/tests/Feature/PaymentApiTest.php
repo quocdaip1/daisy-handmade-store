@@ -13,26 +13,18 @@ class PaymentApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_cod_order_creates_unpaid_payment_and_returns_cod_summary(): void
+    public function test_cod_order_is_rejected(): void
     {
         $user = User::factory()->create();
         Sanctum::actingAs($user);
         $product = $this->product('cod-product');
 
         $this->postJson('/api/orders', $this->payload($product, 'cod'))
-            ->assertOk()
-            ->assertJsonPath('payment.method', 'cod')
-            ->assertJsonPath('payment.status', 'unpaid')
-            ->assertJsonPath('payment.amount', 350000);
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('payment_method');
 
-        $order = $user->orders()->firstOrFail();
-        $this->assertDatabaseHas('payments', [
-            'order_id' => $order->id,
-            'method' => 'cod',
-            'status' => 'unpaid',
-            'amount' => 350000,
-        ]);
-        $this->assertNull($order->payment->metadata);
+        $this->assertDatabaseCount('orders', 0);
+        $this->assertDatabaseCount('payments', 0);
     }
 
     public function test_bank_transfer_order_returns_and_snapshots_transfer_instructions(): void

@@ -6,7 +6,6 @@ use App\Models\CartItem;
 use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Product;
-use App\Models\ShippingMethod;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -21,11 +20,10 @@ class CheckoutPreviewApiTest extends TestCase
         $user = User::factory()->create();
         $product = $this->product(price: 250000);
         CartItem::create(['user_id' => $user->id, 'product_id' => $product->id, 'quantity' => 2]);
-        $shipping = $this->shipping();
         Coupon::create(['code' => 'GIAM100', 'type' => 'fixed', 'value' => 100000, 'minimum_amount' => 400000, 'active' => true]);
         Sanctum::actingAs($user);
 
-        $this->postJson('/api/checkout/preview', array_merge($this->payload($shipping->id), [
+        $this->postJson('/api/checkout/preview', array_merge($this->payload(), [
             'coupon_code' => ' giam100 ',
             'subtotal' => 1,
             'discount' => 1,
@@ -34,8 +32,8 @@ class CheckoutPreviewApiTest extends TestCase
         ]))->assertOk()
             ->assertJsonPath('data.subtotal', 500000)
             ->assertJsonPath('data.discount', 100000)
-            ->assertJsonPath('data.shipping_fee', 30000)
-            ->assertJsonPath('data.grand_total', 430000)
+            ->assertJsonPath('data.shipping_fee', 0)
+            ->assertJsonPath('data.grand_total', 400000)
             ->assertJsonPath('data.items.0.unit_price', 250000);
 
         $this->assertDatabaseCount('orders', 0);
@@ -56,7 +54,6 @@ class CheckoutPreviewApiTest extends TestCase
 
         $this->postJson('/api/checkout/preview', [
             'address_id' => $address->id,
-            'shipping_method_id' => $this->shipping()->id,
         ])->assertUnprocessable()->assertJsonValidationErrors('address_id');
     }
 
@@ -67,7 +64,7 @@ class CheckoutPreviewApiTest extends TestCase
         CartItem::create(['user_id' => $user->id, 'product_id' => $product->id, 'quantity' => 1]);
         Sanctum::actingAs($user);
 
-        $this->postJson('/api/checkout/preview', array_merge($this->payload($this->shipping()->id), [
+        $this->postJson('/api/checkout/preview', array_merge($this->payload(), [
             'coupon_code' => 'KHONGTONTAI',
         ]))->assertUnprocessable()->assertJsonValidationErrors('coupon_code');
     }
@@ -76,7 +73,7 @@ class CheckoutPreviewApiTest extends TestCase
     {
         Sanctum::actingAs(User::factory()->create());
 
-        $this->postJson('/api/checkout/preview', $this->payload($this->shipping()->id))
+        $this->postJson('/api/checkout/preview', $this->payload())
             ->assertUnprocessable()->assertJsonValidationErrors('cart');
     }
 
@@ -86,19 +83,28 @@ class CheckoutPreviewApiTest extends TestCase
         $product = $this->product(price: 320000);
         Sanctum::actingAs($user);
 
-        $this->postJson('/api/checkout/preview', array_merge($this->payload($this->shipping()->id), [
+        $this->postJson('/api/checkout/preview', array_merge($this->payload(), [
             'items' => [['product_id' => $product->id, 'quantity' => 2, 'price' => 1]],
             'subtotal' => 1,
         ]))->assertOk()
             ->assertJsonPath('data.items.0.unit_price', 320000)
             ->assertJsonPath('data.subtotal', 640000)
-            ->assertJsonPath('data.grand_total', 670000);
+            ->assertJsonPath('data.grand_total', 640000);
 
         $this->assertDatabaseCount('orders', 0);
         $this->assertDatabaseCount('cart_items', 0);
     }
 
-    private function payload(int $shippingMethodId): array
+    public function test_checkout_preview_rejects_shipping_method(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson('/api/checkout/preview', array_merge($this->payload(), [
+            'shipping_method_id' => 1,
+        ]))->assertUnprocessable()->assertJsonValidationErrors('shipping_method_id');
+    }
+
+    private function payload(): array
     {
         return [
             'address' => [
@@ -108,19 +114,7 @@ class CheckoutPreviewApiTest extends TestCase
                 'district' => 'Hoàn Kiếm',
                 'address' => '12 Hàng Gai',
             ],
-            'shipping_method_id' => $shippingMethodId,
         ];
-    }
-
-    private function shipping(): ShippingMethod
-    {
-        return ShippingMethod::create([
-            'name' => 'Giao hàng tiêu chuẩn',
-            'code' => 'standard-'.uniqid(),
-            'fee' => 30000,
-            'free_threshold' => 1000000,
-            'active' => true,
-        ]);
     }
 
     private function product(int $price = 250000): Product

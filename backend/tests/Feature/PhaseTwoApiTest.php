@@ -6,7 +6,6 @@ use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Policy;
 use App\Models\Product;
-use App\Models\ShippingMethod;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -53,18 +52,17 @@ class PhaseTwoApiTest extends TestCase
 
         $this->assertDatabaseHas('orders', ['user_id' => $user->id, 'total' => 1000000]);
         $this->assertDatabaseHas('order_items', ['product_id' => $product->id, 'quantity' => 2]);
-        $this->assertDatabaseHas('payments', ['method' => 'cod', 'amount' => 1000000]);
+        $this->assertDatabaseHas('payments', ['method' => 'bank_transfer', 'amount' => 1000000]);
         $this->getJson('/api/orders')->assertOk()->assertJsonPath('meta.total', 1);
     }
 
-    public function test_coupon_shipping_contact_and_policy_public_apis(): void
+    public function test_coupon_contact_and_policy_public_apis_with_shipping_disabled(): void
     {
         Coupon::create(['code' => 'DAISY10', 'type' => 'percent', 'value' => 10, 'minimum_amount' => 800000, 'active' => true]);
-        ShippingMethod::create(['name' => 'Tiêu chuẩn', 'code' => 'standard', 'fee' => 30000, 'free_threshold' => 2000000, 'active' => true]);
         Policy::create(['title' => 'Đổi trả', 'slug' => 'doi-tra', 'content' => 'Nội dung', 'published' => true]);
 
         $this->postJson('/api/coupons/validate', ['code' => 'DAISY10', 'subtotal' => 1000000])->assertOk()->assertJsonPath('data.discount', 100000);
-        $this->postJson('/api/shipping/quote', ['subtotal' => 2500000])->assertOk()->assertJsonPath('data.0.fee', 0);
+        $this->postJson('/api/shipping/quote', ['subtotal' => 2500000])->assertNotFound();
         $this->postJson('/api/contacts', ['name' => 'Khách', 'email' => 'guest@example.com', 'subject' => 'Tư vấn', 'message' => 'Tôi cần tư vấn sản phẩm'])->assertCreated();
         $this->getJson('/api/policies/doi-tra')->assertOk()->assertJsonPath('data.slug', 'doi-tra');
     }

@@ -49,16 +49,13 @@ class SettingsApiTest extends TestCase
         $this->assertSame('ACB', StoreSetting::current()->bank_account['bank_name']);
     }
 
-    public function test_bank_and_shipping_settings_are_used_by_existing_flows(): void
+    public function test_bank_settings_are_used_and_shipping_quote_is_disabled(): void
     {
         $customer = User::factory()->create(['role' => 'customer']);
         Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
         $this->putJson('/api/admin/settings', $this->payload())->assertOk();
 
-        $this->postJson('/api/shipping/quote', ['subtotal' => 100000])
-            ->assertOk()
-            ->assertJsonPath('data.0.code', 'standard')
-            ->assertJsonPath('data.0.fee', 30000);
+        $this->postJson('/api/shipping/quote', ['subtotal' => 100000])->assertNotFound();
 
         $order = Order::create([
             'number' => 'DS-SETTING-1', 'user_id' => $customer->id, 'status' => 'pending',

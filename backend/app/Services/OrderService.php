@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\ShippingMethod;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -40,18 +39,14 @@ class OrderService
                 ? $this->coupons->validate($data['coupon_code'], $subtotal, $user, true)
                 : null;
             $discount = $coupon?->discount($subtotal) ?? 0;
-            $shipping = ! empty($data['shipping_method_id'])
-                ? ShippingMethod::query()->whereKey($data['shipping_method_id'])->where('active', true)->first()
-                : null;
-            $shippingFee = $shipping?->quote($subtotal - $discount) ?? 0;
-            $paymentMethod = $data['payment_method'] ?? 'cod';
-            $paymentStatus = $paymentMethod === 'bank_transfer' ? 'pending_verification' : 'unpaid';
+            $paymentMethod = 'bank_transfer';
+            $paymentStatus = 'pending_verification';
 
             $order = Order::create([
                 'number' => 'DS'.now()->format('YmdHis').str_pad((string) random_int(0, 999), 3, '0', STR_PAD_LEFT),
                 'user_id' => $user->id,
                 'coupon_id' => $coupon?->id,
-                'shipping_method_id' => $shipping?->id,
+                'shipping_method_id' => null,
                 'status' => 'pending',
                 'payment_method' => $paymentMethod,
                 'payment_status' => $paymentStatus,
@@ -62,8 +57,8 @@ class OrderService
                 'note' => $data['note'] ?? null,
                 'subtotal' => $subtotal,
                 'discount' => $discount,
-                'shipping_fee' => $shippingFee,
-                'total' => $subtotal - $discount + $shippingFee,
+                'shipping_fee' => 0,
+                'total' => $subtotal - $discount,
             ]);
 
             foreach ($data['items'] as $item) {

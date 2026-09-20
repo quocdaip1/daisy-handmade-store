@@ -8,24 +8,15 @@ export interface CheckoutAddress {
   address: string
 }
 
-export interface ShippingMethod {
-  id: number
-  name: string
-  code: string
-  fee: number
-}
-
 export interface CheckoutPreviewPayload {
   items: Array<{ product_id: number; quantity: number }>
   address: CheckoutAddress
-  shipping_method_id: number
   coupon_code?: string
 }
 
 export interface CheckoutPreview {
   items: Array<{ product_id: number; name: string; quantity: number; unit_price: number; line_total: number }>
   address: CheckoutAddress
-  shipping_method: Pick<ShippingMethod, 'id' | 'name' | 'code'>
   coupon: { code: string } | null
   subtotal: number
   discount: number
@@ -39,8 +30,7 @@ export interface CreateOrderPayload {
   customer_email: string
   customer_phone: string
   shipping_address: string
-  shipping_method_id: number
-  payment_method: 'cod' | 'bank_transfer'
+  payment_method: 'bank_transfer'
   coupon_code?: string
   note?: string
 }
@@ -97,11 +87,6 @@ async function postJson<T>(path: string, payload: object, token?: string): Promi
   const data = await response.json() as T & ValidationResponse
   if (!response.ok) throw new CheckoutRequestError(response.status, data)
   return data
-}
-
-export async function fetchShippingMethods(subtotal: number): Promise<ShippingMethod[]> {
-  const response = await postJson<{ data: ShippingMethod[] }>('/shipping/quote', { subtotal })
-  return response.data
 }
 
 export async function validateCoupon(code: string, subtotal: number, token?: string): Promise<{ code: string; discount: number }> {
