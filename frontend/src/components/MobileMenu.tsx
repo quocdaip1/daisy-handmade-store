@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-export function MobileMenu() {
+interface MobileMenuProps {
+  isAuthenticated: boolean
+  canAccessAdmin: boolean
+}
+
+export function MobileMenu({ isAuthenticated, canAccessAdmin }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const close = () => setIsOpen(false)
   return (
@@ -13,7 +18,8 @@ export function MobileMenu() {
         <nav id="mobile-navigation" className="mobile-nav" aria-label="Menu di động">
           <Link to="/" onClick={close}>Trang chủ</Link><Link to="/san-pham" onClick={close}>Sản phẩm</Link>
           <Link to="/gioi-thieu" onClick={close}>Giới thiệu</Link><Link to="/lien-he" onClick={close}>Liên hệ</Link>
-          <Link to="/dang-nhap" onClick={close}>Đăng nhập</Link>
+          <Link to={isAuthenticated ? '/tai-khoan' : '/dang-nhap'} onClick={close}>{isAuthenticated ? 'Tài khoản' : 'Đăng nhập'}</Link>
+          {canAccessAdmin ? <Link to="/admin" className="mobile-admin-switch" onClick={close}>Vào trang quản trị</Link> : null}
         </nav>
       ) : null}
     </div>

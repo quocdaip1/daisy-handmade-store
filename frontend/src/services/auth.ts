@@ -50,6 +50,17 @@ export function fetchMe(token: string) {
   return request<{ user: AuthUser }>('/me', { headers: { Authorization: `Bearer ${token}` } }, 'Không thể lấy thông tin người dùng.')
 }
 
+export async function verifyAdminAccess(token: string) {
+  const response = await fetch(apiUrl('/admin/access'), {
+    method: 'HEAD',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!response.ok) {
+    throw new AuthRequestError(response.status, {}, 'Bạn không có quyền truy cập khu vực quản trị.')
+  }
+}
+
 export function logoutUser(token: string) {
   return request<{ message: string }>('/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } }, 'Đăng xuất thất bại.')
 }

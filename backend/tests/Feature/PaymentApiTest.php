@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\BankQrCode;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
@@ -34,7 +35,12 @@ class PaymentApiTest extends TestCase
             'account_number' => '0349671134',
             'account_owner' => 'DAISY HANDMADE STORE',
             'transfer_prefix' => 'DAISY',
-            'qr_image_url' => 'https://example.com/daisy-qr.png',
+            'qr_image_url' => null,
+        ]);
+        $qrCode = BankQrCode::create([
+            'file_name' => 'qr.png',
+            'mime_type' => 'image/png',
+            'image_data' => 'qr-image-data',
         ]);
         $user = User::factory()->create();
         Sanctum::actingAs($user);
@@ -47,7 +53,7 @@ class PaymentApiTest extends TestCase
             ->assertJsonPath('payment.bank_name', 'MB Bank')
             ->assertJsonPath('payment.account_number', '0349671134')
             ->assertJsonPath('payment.account_owner', 'DAISY HANDMADE STORE')
-            ->assertJsonPath('payment.qr_image_url', 'https://example.com/daisy-qr.png');
+            ->assertJsonPath('payment.qr_image_url', route('payments.bank-qr', ['v' => $qrCode->updated_at->timestamp]));
 
         $order = $user->orders()->firstOrFail();
         $response->assertJsonPath('payment.transfer_content', 'DAISY '.$order->number);

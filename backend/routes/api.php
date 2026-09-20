@@ -25,6 +25,7 @@ Route::post('/contacts', [CommerceController::class, 'contact'])->middleware('th
 Route::get('/policies', [CommerceController::class, 'policies']);
 Route::get('/policies/{policy:slug}', [CommerceController::class, 'policy']);
 Route::get('/banners', [CommerceController::class, 'banners']);
+Route::get('/payments/bank-transfer/qr', [CommerceController::class, 'bankQr'])->name('payments.bank-qr');
 
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
@@ -48,6 +49,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard']);
         Route::get('/settings', [AdminSettingsController::class, 'show']);
         Route::put('/settings', [AdminSettingsController::class, 'update']);
+        Route::post('/settings/bank-qr', [AdminSettingsController::class, 'uploadBankQr']);
+        Route::delete('/settings/bank-qr', [AdminSettingsController::class, 'deleteBankQr']);
         Route::get('/customers', [AdminController::class, 'customers']);
         Route::get('/customers/{customer}', [AdminController::class, 'showCustomer']);
         Route::put('/customers/{customer}', [AdminController::class, 'updateCustomer']);

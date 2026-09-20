@@ -1,0 +1,62 @@
+.admin-content-page { display: grid; gap: 1.25rem; }
+.admin-content-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.admin-content-heading p, .admin-content-heading h1 { margin: 0; }
+.admin-content-heading p { color: var(--admin-muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+.admin-content-heading h1 { margin: .25rem 0; font-size: clamp(1.6rem, 3vw, 2.25rem); }
+.admin-content-heading span { color: var(--admin-muted); }
+.admin-content-heading button, .admin-content-card button, .admin-content-table button, .admin-content-pagination button, .admin-content-form-panel button { min-height: 2.5rem; padding: .55rem 1rem; border: 1px solid var(--admin-border); border-radius: .5rem; background: #fff; color: var(--admin-ink); cursor: pointer; }
+.admin-content-heading > button, .admin-content-form-panel button.is-primary { border-color: var(--admin-accent); background: var(--admin-accent); color: #fff; }
+.admin-content-error { padding: .8rem 1rem; border: 1px solid #eccaca; border-radius: .6rem; background: #fff5f5; color: #8f2020; }
+.admin-content-state { padding: 3rem 1rem; border: 1px dashed var(--admin-border); border-radius: .75rem; background: var(--admin-paper); color: var(--admin-muted); text-align: center; }
+.admin-banner-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.admin-content-card { overflow: hidden; border: 1px solid var(--admin-border); border-radius: .75rem; background: var(--admin-paper); }
+.admin-banner-preview { aspect-ratio: 16 / 7; background: var(--admin-canvas); }
+.admin-banner-preview img { width: 100%; height: 100%; object-fit: cover; }
+.admin-banner-card > div:not(.admin-banner-preview) { padding: 1rem; }
+.admin-banner-card h2 { margin: .5rem 0; }
+.admin-banner-card p { color: var(--admin-muted); overflow-wrap: anywhere; }
+.admin-banner-card footer { display: flex; justify-content: flex-end; gap: .5rem; padding: 0 1rem 1rem; }
+.admin-content-badge { display: inline-flex; padding: .25rem .5rem; border-radius: 999px; background: #f2e3dc; color: var(--admin-accent); font-size: .75rem; font-weight: 700; }
+.admin-content-status { display: inline-flex; padding: .3rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+.admin-content-status.is-active { background: #e4f5e9; color: #246b38; }
+.admin-content-status.is-inactive { background: #eee9e7; color: #695d58; }
+.admin-content-table-wrap { overflow-x: auto; border: 1px solid var(--admin-border); border-radius: .75rem; background: var(--admin-paper); }
+.admin-content-table { width: 100%; min-width: 56rem; border-collapse: collapse; }
+.admin-content-table th, .admin-content-table td { padding: .9rem 1rem; border-bottom: 1px solid var(--admin-border); text-align: left; vertical-align: middle; }
+.admin-content-table th { color: var(--admin-muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+.admin-content-table tbody tr:last-child td { border-bottom: 0; }
+.admin-content-stack { display: grid; gap: .2rem; }
+.admin-content-stack small { color: var(--admin-muted); }
+.admin-content-actions, .admin-content-pagination { display: flex; justify-content: flex-end; align-items: center; gap: .5rem; }
+.admin-content-pagination button:disabled, .admin-content-form-panel button:disabled { cursor: not-allowed; opacity: .55; }
+.admin-content-form-layer { position: fixed; inset: 0; z-index: 50; display: flex; justify-content: flex-end; background: rgb(35 25 22 / .48); }
+.admin-content-form-panel { width: min(38rem, 100%); height: 100%; overflow-y: auto; padding: 1.5rem; background: var(--admin-paper); box-shadow: -1rem 0 3rem rgb(35 25 22 / .18); }
+.admin-content-form-panel.is-wide { width: min(52rem, 100%); }
+.admin-content-form-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.admin-content-form-panel header h2 { margin: 0; }
+.admin-content-form-panel header button { min-width: 2.5rem; padding: 0; font-size: 1.4rem; }
+.admin-content-form-panel form, .admin-content-form-panel form > label { display: grid; gap: .9rem; }
+.admin-content-form-panel form > label, .admin-content-form-grid label { gap: .4rem; color: var(--admin-muted); font-size: .82rem; font-weight: 700; }
+.admin-content-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.admin-content-form-panel input, .admin-content-form-panel select, .admin-content-form-panel textarea { width: 100%; min-height: 2.65rem; padding: .6rem .7rem; border: 1px solid var(--admin-border); border-radius: .45rem; background: #fff; color: var(--admin-ink); font: inherit; }
+.admin-content-form-panel textarea { resize: vertical; }
+.admin-content-form-panel label small { color: #9d2525; }
+.admin-content-form-panel label.admin-content-check { display: flex; align-items: center; gap: .5rem; }
+.admin-content-check input { width: auto; min-height: auto; }
+.admin-content-form-panel form > footer { position: sticky; bottom: -1.5rem; display: flex; justify-content: flex-end; gap: .75rem; margin: 0 -1.5rem -1.5rem; padding: 1rem 1.5rem; border-top: 1px solid var(--admin-border); background: var(--admin-paper); }
+.admin-contact-detail dl { display: grid; gap: 1rem; }
+.admin-contact-detail dl div { display: grid; gap: .25rem; }
+.admin-contact-detail dt { color: var(--admin-muted); font-size: .8rem; }
+.admin-contact-detail dd { margin: 0; overflow-wrap: anywhere; }
+.admin-contact-message { white-space: pre-wrap; }
+.admin-content-note { padding: .75rem; border-radius: .5rem; background: var(--admin-canvas); color: var(--admin-muted); font-size: .82rem; }
+
+@media (max-width: 800px) {
+  .admin-banner-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .admin-content-heading { align-items: stretch; flex-direction: column; }
+  .admin-content-form-grid { grid-template-columns: 1fr; }
+  .admin-content-form-panel { padding: 1rem; }
+  .admin-content-form-panel form > footer { bottom: -1rem; margin: 0 -1rem -1rem; padding: 1rem; }
+}

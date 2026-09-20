@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminBankQrRequest;
 use App\Http\Requests\AdminSettingsRequest;
+use App\Models\BankQrCode;
 use App\Models\ShippingMethod;
 use App\Models\StoreSetting;
 use Illuminate\Http\JsonResponse;
@@ -43,11 +45,33 @@ class AdminSettingsController extends Controller
         return $this->response(StoreSetting::current()->fresh());
     }
 
+    public function uploadBankQr(AdminBankQrRequest $request): JsonResponse
+    {
+        $image = $request->file('qr_image');
+
+        BankQrCode::query()->updateOrCreate(['id' => 1], [
+            'file_name' => $image->getClientOriginalName(),
+            'mime_type' => $image->getMimeType() ?: 'image/png',
+            'image_data' => $image->get(),
+        ]);
+
+        return $this->response(StoreSetting::current());
+    }
+
+    public function deleteBankQr(): JsonResponse
+    {
+        BankQrCode::query()->delete();
+
+        return $this->response(StoreSetting::current());
+    }
+
     private function response(StoreSetting $settings): JsonResponse
     {
         return response()->json(['data' => [
             'shop_information' => $settings->shop_information,
-            'bank_account' => $settings->bank_account,
+            'bank_account' => array_merge($settings->bank_account, [
+                'qr_image_url' => BankQrCode::publicUrl(),
+            ]),
             'shipping_methods' => ShippingMethod::query()->orderBy('name')->get(),
             'social_links' => $settings->social_links,
             'seo_defaults' => $settings->seo_defaults,

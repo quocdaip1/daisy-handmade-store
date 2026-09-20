@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BankQrCode;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\StoreSetting;
@@ -52,7 +53,7 @@ class PaymentService
             'account_number' => $config['account_number'],
             'account_owner' => $config['account_owner'],
             'transfer_content' => trim($config['transfer_prefix'].' '.$order->number),
-            'qr_image_url' => $config['qr_image_url'] ?: null,
+            'qr_image_url' => BankQrCode::publicUrl(),
         ];
     }
 }

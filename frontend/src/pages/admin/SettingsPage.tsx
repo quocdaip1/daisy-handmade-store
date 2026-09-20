@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/useAuth'
-import { AdminSettingsRequestError, fetchAdminSettings, updateAdminSettings } from '../../services/admin/settings'
+import { AdminSettingsRequestError, deleteBankQr, fetchAdminSettings, updateAdminSettings, uploadBankQr } from '../../services/admin/settings'
 import type { AdminSettings } from '../../types/admin-settings'
 import './settings.css'
 
@@ -9,6 +9,7 @@ export function SettingsPage() {
   const [settings, setSettings] = useState<AdminSettings | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isUpdatingQr, setIsUpdatingQr] = useState(false)
   const [message, setMessage] = useState('')
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [reloadKey, setReloadKey] = useState(0)
@@ -55,6 +56,43 @@ export function SettingsPage() {
     }
   }
 
+  const changeQr = async (file?: File) => {
+    if (!session || !file) return
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setMessage('Mã QR phải là ảnh PNG, JPG hoặc WebP.')
+      return
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      setMessage('Ảnh mã QR không được lớn hơn 4 MB.')
+      return
+    }
+
+    setIsUpdatingQr(true)
+    setMessage('')
+    try {
+      setSettings(await uploadBankQr(session.token, file))
+      setMessage('Đã lưu ảnh mã QR thanh toán.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Không thể tải ảnh mã QR lên.')
+    } finally {
+      setIsUpdatingQr(false)
+    }
+  }
+
+  const removeQr = async () => {
+    if (!session) return
+    setIsUpdatingQr(true)
+    setMessage('')
+    try {
+      setSettings(await deleteBankQr(session.token))
+      setMessage('Đã xóa ảnh mã QR thanh toán.')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Không thể xóa ảnh mã QR.')
+    } finally {
+      setIsUpdatingQr(false)
+    }
+  }
+
   if (isLoading) return <div className="admin-settings-state" aria-live="polite">Đang tải cấu hình...</div>
   if (!settings) return <div className="admin-settings-state" role="alert">{message}<button type="button" onClick={() => { setIsLoading(true); setReloadKey((key) => key + 1) }}>Thử lại</button></div>
 
@@ -76,7 +114,7 @@ export function SettingsPage() {
           <label>Số tài khoản<input value={settings.bankAccount.accountNumber} maxLength={50} onChange={(event) => setSettings({ ...settings, bankAccount: { ...settings.bankAccount, accountNumber: event.target.value } })} />{fieldError('bank_account.account_number') ? <small>{fieldError('bank_account.account_number')}</small> : null}</label>
           <label>Chủ tài khoản<input value={settings.bankAccount.accountOwner} maxLength={255} onChange={(event) => setSettings({ ...settings, bankAccount: { ...settings.bankAccount, accountOwner: event.target.value } })} />{fieldError('bank_account.account_owner') ? <small>{fieldError('bank_account.account_owner')}</small> : null}</label>
           <label>Tiền tố nội dung<input value={settings.bankAccount.transferPrefix} maxLength={30} onChange={(event) => setSettings({ ...settings, bankAccount: { ...settings.bankAccount, transferPrefix: event.target.value } })} />{fieldError('bank_account.transfer_prefix') ? <small>{fieldError('bank_account.transfer_prefix')}</small> : null}</label>
-          <label className="admin-settings-wide">URL ảnh QR<input type="url" value={settings.bankAccount.qrImageUrl} maxLength={2048} onChange={(event) => setSettings({ ...settings, bankAccount: { ...settings.bankAccount, qrImageUrl: event.target.value } })} />{fieldError('bank_account.qr_image_url') ? <small>{fieldError('bank_account.qr_image_url')}</small> : null}</label>
+          <div className="admin-settings-wide admin-bank-qr"><div className="admin-bank-qr-preview">{settings.bankAccount.qrImageUrl ? <img src={settings.bankAccount.qrImageUrl} alt="Mã QR thanh toán ngân hàng hiện tại" /> : <div><span aria-hidden="true">▣</span><strong>Chưa có mã QR</strong><small>Khách hàng sẽ thấy thông báo hướng dẫn chuyển khoản thủ công.</small></div>}</div><div className="admin-bank-qr-actions"><strong>Ảnh mã QR thanh toán</strong><p>Dùng ảnh PNG, JPG hoặc WebP, tối đa 4 MB. Ảnh mới sẽ thay thế ảnh hiện tại.</p><label className="admin-settings-upload">{isUpdatingQr ? 'Đang xử lý...' : settings.bankAccount.qrImageUrl ? 'Thay ảnh QR' : 'Thêm ảnh QR'}<input type="file" accept="image/png,image/jpeg,image/webp" disabled={isUpdatingQr} onChange={(event) => { void changeQr(event.target.files?.[0]); event.currentTarget.value = '' }} /></label>{settings.bankAccount.qrImageUrl ? <button type="button" className="admin-settings-delete-qr" disabled={isUpdatingQr} onClick={() => void removeQr()}>Xóa ảnh QR</button> : null}</div></div>
         </div></fieldset>
 
         <fieldset><legend>Liên kết mạng xã hội</legend><div className="admin-settings-grid">{(['facebook', 'instagram', 'tiktok', 'youtube', 'messenger'] as const).map((network) => <label key={network}>{network.charAt(0).toUpperCase() + network.slice(1)}<input type="url" value={settings.socialLinks[network]} maxLength={2048} onChange={(event) => setSettings({ ...settings, socialLinks: { ...settings.socialLinks, [network]: event.target.value } })} />{fieldError(`social_links.${network}`) ? <small>{fieldError(`social_links.${network}`)}</small> : null}</label>)}</div></fieldset>

@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { AUTH_TOKEN_KEY, AuthRequestError, loginUser } from '../services/auth'
+import { useAuth } from '../auth/useAuth'
+import { AuthRequestError, loginUser } from '../services/auth'
 
 interface LoginFormErrors { email?: string; password?: string }
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const { startSession } = useAuth()
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState<LoginFormErrors>({})
   const [error, setError] = useState('')
@@ -22,7 +24,7 @@ export function LoginPage() {
     setIsSubmitting(true); setError('')
     try {
       const response = await loginUser({ email: formData.email.trim(), password: formData.password })
-      window.localStorage.setItem(AUTH_TOKEN_KEY, response.token)
+      startSession({ token: response.token, user: response.user })
       navigate('/tai-khoan', { replace: true })
     } catch (submitError) {
       if (submitError instanceof AuthRequestError) {

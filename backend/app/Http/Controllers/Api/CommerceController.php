@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\BankQrCode;
 use App\Models\Banner;
 use App\Models\Contact;
 use App\Models\Policy;
@@ -10,6 +11,20 @@ use Illuminate\Http\Request;
 
 class CommerceController extends Controller
 {
+    public function bankQr()
+    {
+        $qrCode = BankQrCode::current();
+        abort_unless($qrCode, 404);
+
+        return response($qrCode->image_data, 200, [
+            'Content-Type' => $qrCode->mime_type,
+            'Content-Disposition' => 'inline; filename="bank-transfer-qr"',
+            'Cache-Control' => 'public, max-age=300',
+            'ETag' => '"'.sha1($qrCode->image_data).'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
     public function contact(Request $r)
     {
         $contact = Contact::create($r->validate(['name' => ['required', 'string', 'max:255'], 'email' => ['required', 'email', 'max:255'], 'phone' => ['nullable', 'string', 'max:20'], 'subject' => ['required', 'string', 'max:255'], 'message' => ['required', 'string', 'max:3000']]));

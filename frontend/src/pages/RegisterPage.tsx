@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { AUTH_TOKEN_KEY, AuthRequestError, registerUser } from '../services/auth'
+import { useAuth } from '../auth/useAuth'
+import { AuthRequestError, registerUser } from '../services/auth'
 
 interface RegisterFormErrors { fullName?: string; email?: string; password?: string; confirmPassword?: string }
 
 export function RegisterPage() {
   const navigate = useNavigate()
+  const { startSession } = useAuth()
   const [formData, setFormData] = useState({ fullName: '', email: '', password: '', confirmPassword: '' })
   const [errors, setErrors] = useState<RegisterFormErrors>({})
   const [error, setError] = useState('')
@@ -25,7 +27,7 @@ export function RegisterPage() {
     setIsSubmitting(true); setError('')
     try {
       const response = await registerUser({ name: formData.fullName.trim(), email: formData.email.trim(), password: formData.password })
-      window.localStorage.setItem(AUTH_TOKEN_KEY, response.token)
+      startSession({ token: response.token, user: response.user })
       navigate('/tai-khoan', { replace: true })
     } catch (submitError) {
       if (submitError instanceof AuthRequestError) {

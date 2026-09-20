@@ -1,11 +1,14 @@
+import { AuthProvider } from './auth/AuthProvider'
 import { MainLayout } from './layouts/MainLayout'
 import { AppRoutes } from './routes/AppRoutes'
 
 function App() {
   return (
-    <MainLayout>
-      <AppRoutes />
-    </MainLayout>
+    <AuthProvider>
+      <MainLayout>
+        <AppRoutes />
+      </MainLayout>
+    </AuthProvider>
   )
 }
 

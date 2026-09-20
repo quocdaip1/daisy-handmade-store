@@ -25,7 +25,6 @@ class AdminSettingsRequest extends FormRequest
             'bank_account.account_number' => ['required', 'string', 'max:50'],
             'bank_account.account_owner' => ['required', 'string', 'max:255'],
             'bank_account.transfer_prefix' => ['required', 'alpha_dash', 'max:30'],
-            'bank_account.qr_image_url' => ['nullable', 'url:http,https', 'max:2048'],
             'shipping_methods' => ['required', 'array', 'max:20'],
             'shipping_methods.*.name' => ['required', 'string', 'max:255'],
             'shipping_methods.*.code' => ['required', 'alpha_dash', 'max:100', 'distinct'],
