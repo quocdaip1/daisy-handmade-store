@@ -15,7 +15,7 @@ export function CartPage() {
       <nav className="checkout-steps" aria-label="Tiến trình mua hàng"><span className="active"><b>1</b>Giỏ hàng</span><i /><span><b>2</b>Thanh toán</span><i /><span><b>3</b>Hoàn tất</span></nav>
       <header className="cart-heading"><div><p className="eyebrow">Daisy Handmade Store</p><h1>Giỏ hàng của bạn</h1><p>{totalItems} món đã chọn</p></div><button type="button" className="cart-clear-button" onClick={clearCart} aria-label={`Xóa toàn bộ ${totalItems} món khỏi giỏ hàng`}>Xóa tất cả</button></header>
 
-      <div className="free-shipping-card" role="note"><div><span aria-hidden="true">✦</span><p>Giá sản phẩm, ưu đãi và phí vận chuyển sẽ được backend kiểm tra lại trước khi bạn xác nhận đặt hàng.</p></div></div>
+      <div className="free-shipping-card" role="note"><div><span aria-hidden="true">✦</span><p>Giá sản phẩm và ưu đãi sẽ được xác nhận trước khi bạn đặt hàng.</p></div></div>
 
       <div className="cart-page">
         <div className="cart-list">
@@ -50,7 +50,7 @@ export function CartPage() {
           </div>
           <div className="summary-total"><span>Tạm tính</span><div><strong>{formatCurrency(totalPrice)}</strong><small>Chưa phải tổng thanh toán cuối cùng</small></div></div>
           <Link to="/thanh-toan" className="button button-primary summary-checkout-button">Tiến hành thanh toán <span aria-hidden="true">→</span></Link>
-          <div className="summary-assurance"><span>✓ Backend xác nhận giá và tồn kho</span><span>✓ Đổi trả trong 7 ngày</span><span>✓ Đóng gói quà tặng</span></div>
+          <div className="summary-assurance"><span>✓ Giá và số lượng sản phẩm được xác nhận trước khi đặt hàng</span><span>✓ Đổi trả trong 7 ngày</span><span>✓ Đóng gói quà tặng</span></div>
         </aside>
       </div>
     </section>
