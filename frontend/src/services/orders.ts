@@ -11,20 +11,28 @@ export interface CheckoutAddress {
 export interface CheckoutPreviewPayload {
   items: Array<{ product_id: number; quantity: number }>
   address: CheckoutAddress
+  customer_email: string
+  note?: string
+  payment_method: 'bank_transfer'
   coupon_code?: string
 }
 
 export interface CheckoutPreview {
   items: Array<{ product_id: number; name: string; quantity: number; unit_price: number; line_total: number }>
   address: CheckoutAddress
-  coupon: { code: string } | null
+  success: true
+  preview_id: string
+  expires_at: string
+  coupon: { code: string; valid: true; discount: number } | null
   subtotal: number
   discount: number
   shipping_fee: number
   grand_total: number
+  total: number
 }
 
 export interface CreateOrderPayload {
+  preview_id: string
   items: Array<{ product_id: number; quantity: number }>
   customer_name: string
   customer_email: string
@@ -49,6 +57,7 @@ export interface OrderPayment {
 export interface CreateOrderResponse {
   message: string
   order: {
+    number: string
     customer_name: string
     customer_email: string
     customer_phone: string
@@ -76,17 +85,31 @@ export class CheckoutRequestError extends Error {
 }
 
 async function postJson<T>(path: string, payload: object, token?: string): Promise<T> {
-  const response = await fetch(apiUrl(path), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(payload),
-  })
-  const data = await response.json() as T & ValidationResponse
-  if (!response.ok) throw new CheckoutRequestError(response.status, data)
-  return data
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), 15000)
+  try {
+    const response = await fetch(apiUrl(path), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    })
+    const data = await response.json() as T & ValidationResponse
+    if (!response.ok) throw new CheckoutRequestError(response.status, data)
+    return data
+  } catch (error) {
+    if (error instanceof CheckoutRequestError) throw error
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new CheckoutRequestError(408, { message: 'Máy chủ phản hồi quá lâu. Vui lòng thử lại.' })
+    }
+    throw new CheckoutRequestError(0, { message: 'Không thể kết nối máy chủ. Vui lòng kiểm tra mạng và thử lại.' })
+  } finally {
+    window.clearTimeout(timeout)
+  }
 }
 
 export async function validateCoupon(code: string, subtotal: number, token?: string): Promise<{ code: string; discount: number }> {

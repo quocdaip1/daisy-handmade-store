@@ -28,10 +28,13 @@ class CheckoutPreviewRequest extends FormRequest
             'address.city' => ['required_without:address_id', 'string', 'max:100'],
             'address.district' => ['required_without:address_id', 'string', 'max:100'],
             'address.address' => ['required_without:address_id', 'string', 'max:500'],
+            'customer_email' => ['required', 'email', 'max:255'],
+            'note' => ['nullable', 'string', 'max:2000'],
+            'payment_method' => ['required', 'in:bank_transfer'],
             'shipping_method_id' => ['prohibited'],
             'coupon_code' => ['nullable', 'string', 'max:50'],
             'items' => ['nullable', 'array', 'min:1', 'max:50'],
-            'items.*.product_id' => ['required_with:items', 'integer', 'distinct', 'exists:products,id'],
+            'items.*.product_id' => ['required_with:items', 'integer', 'distinct'],
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1', 'max:1000'],
         ];
     }

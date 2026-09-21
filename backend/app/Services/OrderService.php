@@ -13,32 +13,15 @@ class OrderService
     public function __construct(
         private readonly CouponService $coupons,
         private readonly PaymentService $payments,
+        private readonly CheckoutPreviewService $checkoutPreviews,
     ) {}
 
     public function create(User $user, array $data): Order
     {
         return DB::transaction(function () use ($user, $data): Order {
-            $products = Product::query()
-                ->whereIn('id', collect($data['items'])->pluck('product_id'))
-                ->lockForUpdate()
-                ->get()
-                ->keyBy('id');
-            $subtotal = 0;
-
-            foreach ($data['items'] as $item) {
-                $product = $products->get($item['product_id']);
-                if (! $product || $product->status !== 'published' || $product->stock < $item['quantity']) {
-                    throw ValidationException::withMessages([
-                        'items' => "Sản phẩm {$product?->name} không đủ tồn kho hoặc không còn bán.",
-                    ]);
-                }
-                $subtotal += $product->price * $item['quantity'];
-            }
-
-            $coupon = ! empty($data['coupon_code'])
-                ? $this->coupons->validate($data['coupon_code'], $subtotal, $user, true)
-                : null;
-            $discount = $coupon?->discount($subtotal) ?? 0;
+            ['preview' => $preview, 'pricing' => $pricing] = $this->checkoutPreviews->verifyForOrder($user, $data);
+            $products = Product::query()->whereIn('id', collect($data['items'])->pluck('product_id'))->get()->keyBy('id');
+            $coupon = $pricing['coupon_model'];
             $paymentMethod = 'bank_transfer';
             $paymentStatus = 'pending_verification';
 
@@ -55,10 +38,10 @@ class OrderService
                 'customer_phone' => $data['customer_phone'],
                 'shipping_address' => $data['shipping_address'],
                 'note' => $data['note'] ?? null,
-                'subtotal' => $subtotal,
-                'discount' => $discount,
+                'subtotal' => $pricing['subtotal'],
+                'discount' => $pricing['discount'],
                 'shipping_fee' => 0,
-                'total' => $subtotal - $discount,
+                'total' => $pricing['grand_total'],
             ]);
 
             foreach ($data['items'] as $item) {
@@ -79,6 +62,7 @@ class OrderService
                 $this->coupons->track($coupon, $user, $order);
             }
             $user->cartItems()->delete();
+            $preview->update(['consumed_at' => now()]);
 
             return $order->load(['items', 'payment']);
         });

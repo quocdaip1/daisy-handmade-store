@@ -31,7 +31,7 @@ class CouponApiTest extends TestCase
         $this->coupon(['code' => 'FUTURE', 'starts_at' => now()->addMinute()]);
 
         $this->postJson('/api/coupons/validate', ['code' => 'EXPIRED', 'subtotal' => 1000000])
-            ->assertUnprocessable()->assertExactJson(['message' => 'Mã giảm giá không hợp lệ.']);
+            ->assertUnprocessable()->assertJsonPath('errors.coupon_code.0', 'Mã giảm giá đã hết hạn.');
         $this->postJson('/api/coupons/validate', ['code' => 'FUTURE', 'subtotal' => 1000000])
             ->assertUnprocessable();
     }
@@ -41,7 +41,8 @@ class CouponApiTest extends TestCase
         $this->coupon(['minimum_amount' => 500000]);
 
         $this->postJson('/api/coupons/validate', ['code' => 'DAISY10', 'subtotal' => 499999])
-            ->assertUnprocessable();
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.coupon_code.0', 'Đơn hàng chưa đạt giá trị tối thiểu để sử dụng mã này.');
     }
 
     public function test_global_usage_limit_exceeded_is_rejected(): void
@@ -49,7 +50,8 @@ class CouponApiTest extends TestCase
         $this->coupon(['usage_limit' => 2, 'used_count' => 2]);
 
         $this->postJson('/api/coupons/validate', ['code' => 'DAISY10', 'subtotal' => 1000000])
-            ->assertUnprocessable();
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.coupon_code.0', 'Mã giảm giá đã hết lượt sử dụng.');
     }
 
     public function test_order_tracks_usage_and_enforces_per_user_limit(): void
@@ -59,20 +61,15 @@ class CouponApiTest extends TestCase
         $coupon = $this->coupon(['per_user_limit' => 1, 'usage_limit' => 10]);
         Sanctum::actingAs($user);
 
-        $payload = [
-            'items' => [['product_id' => $product->id, 'quantity' => 1]],
-            'customer_name' => 'Khách Daisy',
-            'customer_email' => 'daisy@example.com',
-            'customer_phone' => '0900000000',
-            'shipping_address' => 'Hà Nội',
-            'coupon_code' => 'daisy10',
-        ];
+        $items = [['product_id' => $product->id, 'quantity' => 1]];
+        $payload = $this->orderPayloadFromPreview($items, ['coupon_code' => 'daisy10']);
 
         $this->postJson('/api/orders', $payload)->assertOk()->assertJsonPath('order.total', 900000);
         $this->assertDatabaseHas('orders', ['coupon_id' => $coupon->id, 'discount' => 100000]);
         $this->assertDatabaseHas('coupon_usages', ['coupon_id' => $coupon->id, 'user_id' => $user->id]);
         $this->assertSame(1, $coupon->fresh()->used_count);
-        $this->postJson('/api/orders', $payload)->assertUnprocessable()->assertJsonValidationErrors('coupon_code');
+        $this->postJson('/api/checkout/preview', $this->checkoutPreviewPayload($items, ['coupon_code' => 'daisy10']))
+            ->assertUnprocessable()->assertJsonValidationErrors('coupon_code');
     }
 
     private function coupon(array $attributes = []): Coupon

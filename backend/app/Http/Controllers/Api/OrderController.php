@@ -35,7 +35,7 @@ class OrderController extends Controller
     {
         $order = $service->create($request->user(), $request->validated());
 
-        return response()->json(['message' => 'Đặt hàng thành công.', 'order' => ['customer_name' => $order->customer_name, 'customer_email' => $order->customer_email, 'customer_phone' => $order->customer_phone, 'shipping_address' => $order->shipping_address, 'total' => $order->total, 'items' => $order->items->map(fn ($item) => ['product_id' => $item->product_id, 'quantity' => $item->quantity, 'price' => $item->price])->all()], 'payment' => $payments->response($order->payment)]);
+        return response()->json(['message' => 'Đặt hàng thành công.', 'order' => ['number' => $order->number, 'customer_name' => $order->customer_name, 'customer_email' => $order->customer_email, 'customer_phone' => $order->customer_phone, 'shipping_address' => $order->shipping_address, 'total' => $order->total, 'items' => $order->items->map(fn ($item) => ['product_id' => $item->product_id, 'quantity' => $item->quantity, 'price' => $item->price])->all()], 'payment' => $payments->response($order->payment)]);
     }
 
     public function cancel(Order $order, OrderService $service): OrderResource

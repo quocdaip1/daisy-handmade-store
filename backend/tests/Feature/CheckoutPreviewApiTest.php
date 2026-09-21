@@ -30,14 +30,18 @@ class CheckoutPreviewApiTest extends TestCase
             'shipping_fee' => 1,
             'grand_total' => 1,
         ]))->assertOk()
+            ->assertJsonPath('data.success', true)
             ->assertJsonPath('data.subtotal', 500000)
             ->assertJsonPath('data.discount', 100000)
             ->assertJsonPath('data.shipping_fee', 0)
             ->assertJsonPath('data.grand_total', 400000)
+            ->assertJsonPath('data.total', 400000)
+            ->assertJsonPath('data.coupon.discount', 100000)
             ->assertJsonPath('data.items.0.unit_price', 250000);
 
         $this->assertDatabaseCount('orders', 0);
         $this->assertDatabaseCount('coupon_usages', 0);
+        $this->assertDatabaseCount('checkout_previews', 1);
     }
 
     public function test_checkout_preview_rejects_invalid_or_unowned_address(): void
@@ -54,6 +58,8 @@ class CheckoutPreviewApiTest extends TestCase
 
         $this->postJson('/api/checkout/preview', [
             'address_id' => $address->id,
+            'customer_email' => 'daisy@example.com',
+            'payment_method' => 'bank_transfer',
         ])->assertUnprocessable()->assertJsonValidationErrors('address_id');
     }
 
@@ -114,6 +120,8 @@ class CheckoutPreviewApiTest extends TestCase
                 'district' => 'Hoàn Kiếm',
                 'address' => '12 Hàng Gai',
             ],
+            'customer_email' => 'daisy@example.com',
+            'payment_method' => 'bank_transfer',
         ];
     }
 

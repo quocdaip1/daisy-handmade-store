@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\CartItem;
 use App\Models\Category;
+use App\Models\CheckoutPreview;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
@@ -49,9 +50,9 @@ class OrderApiTest extends TestCase
             'minimum_amount' => 0, 'usage_limit' => 10, 'active' => true,
         ]);
 
-        $this->postJson('/api/orders', array_merge($this->payload([
+        $this->postJson('/api/orders', $this->payload([
             ['product_id' => $product->id, 'quantity' => 2],
-        ]), ['coupon_code' => 'HUY10']))->assertOk();
+        ], ['coupon_code' => 'HUY10']))->assertOk();
         $order = $user->orders()->firstOrFail();
         $this->assertSame(3, $product->fresh()->stock);
 
@@ -89,9 +90,9 @@ class OrderApiTest extends TestCase
         Sanctum::actingAs(User::factory()->create());
         $product = $this->createProduct('tram-coupon-sai', 5, 500000);
 
-        $this->postJson('/api/orders', array_merge($this->payload([
+        $this->postJson('/api/checkout/preview', $this->checkoutPreviewPayload([
             ['product_id' => $product->id, 'quantity' => 1],
-        ]), ['coupon_code' => 'KHONG-TON-TAI']))
+        ], ['coupon_code' => 'KHONG-TON-TAI']))
             ->assertUnprocessable()->assertJsonValidationErrors('coupon_code');
 
         $this->assertSame(5, $product->fresh()->stock);
@@ -104,7 +105,7 @@ class OrderApiTest extends TestCase
         $available = $this->createProduct('tram-hoa-mai', 5, 500000);
         $insufficient = $this->createProduct('kieng-hoa-sen', 1, 700000);
 
-        $this->postJson('/api/orders', $this->payload([
+        $this->postJson('/api/checkout/preview', $this->checkoutPreviewPayload([
             ['product_id' => $available->id, 'quantity' => 2],
             ['product_id' => $insufficient->id, 'quantity' => 2],
         ]))->assertUnprocessable();
@@ -118,14 +119,65 @@ class OrderApiTest extends TestCase
         Sanctum::actingAs(User::factory()->create());
         $product = $this->createProduct('tram-lien-hoa', 5, 500000);
 
-        $this->postJson('/api/orders', $this->payload([
+        $this->postJson('/api/checkout/preview', $this->checkoutPreviewPayload([
             ['product_id' => $product->id, 'quantity' => 1],
             ['product_id' => $product->id, 'quantity' => 1],
         ]))->assertUnprocessable();
 
-        $this->postJson('/api/orders', $this->payload([
+        $this->postJson('/api/checkout/preview', $this->checkoutPreviewPayload([
             ['product_id' => 999999, 'quantity' => 1],
         ]))->assertUnprocessable();
+    }
+
+    public function test_order_requires_matching_unexpired_preview_and_preview_is_single_use(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $product = $this->createProduct('tram-preview', 5, 500000);
+        $payload = $this->payload([['product_id' => $product->id, 'quantity' => 1]]);
+
+        $changed = array_merge($payload, ['shipping_address' => 'Địa chỉ khác, Đồng Nai, Việt Nam']);
+        $this->postJson('/api/orders', $changed)
+            ->assertUnprocessable()->assertJsonValidationErrors('preview_id');
+        $this->assertDatabaseCount('orders', 0);
+
+        $this->postJson('/api/orders', $payload)->assertOk();
+        $this->postJson('/api/orders', $payload)
+            ->assertUnprocessable()->assertJsonValidationErrors('preview_id');
+        $this->assertDatabaseCount('orders', 1);
+    }
+
+    public function test_expired_preview_cannot_create_order(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $product = $this->createProduct('tram-preview-expired', 5, 500000);
+        $payload = $this->payload([['product_id' => $product->id, 'quantity' => 1]]);
+        CheckoutPreview::query()->whereKey($payload['preview_id'])->update(['expires_at' => now()->subMinute()]);
+
+        $this->postJson('/api/orders', $payload)
+            ->assertUnprocessable()->assertJsonValidationErrors('preview_id');
+        $this->assertDatabaseCount('orders', 0);
+        $this->assertSame(5, $product->fresh()->stock);
+    }
+
+    public function test_price_or_stock_change_after_preview_requires_customer_review(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $product = $this->createProduct('tram-preview-price', 5, 500000);
+        $payload = $this->payload([['product_id' => $product->id, 'quantity' => 2]]);
+        $product->update(['price' => 600000]);
+
+        $this->postJson('/api/orders', $payload)
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.preview_id.0', 'Giá của một số sản phẩm vừa được cập nhật. Vui lòng tính lại tổng thanh toán.');
+        $this->assertDatabaseCount('orders', 0);
+        $this->assertSame(5, $product->fresh()->stock);
+
+        $payload = $this->payload([['product_id' => $product->id, 'quantity' => 2]]);
+        $product->update(['stock' => 1]);
+        $this->postJson('/api/orders', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('cart');
+        $this->assertDatabaseCount('orders', 0);
     }
 
     private function createProduct(string $slug, int $stock, int $price): Product
@@ -153,14 +205,8 @@ class OrderApiTest extends TestCase
     }
 
     /** @param array<int, array{product_id: int, quantity: int}> $items */
-    private function payload(array $items): array
+    private function payload(array $items, array $overrides = []): array
     {
-        return [
-            'items' => $items,
-            'customer_name' => 'Daisy Customer',
-            'customer_email' => 'customer@example.com',
-            'customer_phone' => '0901234567',
-            'shipping_address' => 'Đồng Nai, Việt Nam',
-        ];
+        return $this->orderPayloadFromPreview($items, $overrides);
     }
 }

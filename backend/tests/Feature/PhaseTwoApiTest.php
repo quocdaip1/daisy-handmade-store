@@ -48,7 +48,9 @@ class PhaseTwoApiTest extends TestCase
         $category = Category::create(['name' => 'Trâm', 'slug' => 'tram']);
         $product = Product::create($this->product($category->id, 'Trâm Sen', 'tram-sen', 500000));
 
-        $this->postJson('/api/orders', ['items' => [['product_id' => $product->id, 'quantity' => 2]], 'customer_name' => 'Daisy', 'customer_email' => 'daisy@example.com', 'customer_phone' => '0901234567', 'shipping_address' => 'Đồng Nai'])->assertOk();
+        $this->postJson('/api/orders', $this->orderPayloadFromPreview([
+            ['product_id' => $product->id, 'quantity' => 2],
+        ]))->assertOk();
 
         $this->assertDatabaseHas('orders', ['user_id' => $user->id, 'total' => 1000000]);
         $this->assertDatabaseHas('order_items', ['product_id' => $product->id, 'quantity' => 2]);
@@ -81,7 +83,9 @@ class PhaseTwoApiTest extends TestCase
         Sanctum::actingAs($owner);
         $category = Category::create(['name' => 'Trâm', 'slug' => 'tram-policy']);
         $product = Product::create($this->product($category->id, 'Trâm Sen', 'tram-policy', 500000));
-        $this->postJson('/api/orders', ['items' => [['product_id' => $product->id, 'quantity' => 1]], 'customer_name' => 'Daisy', 'customer_email' => 'daisy@example.com', 'customer_phone' => '0901234567', 'shipping_address' => 'Đồng Nai'])->assertOk();
+        $this->postJson('/api/orders', $this->orderPayloadFromPreview([
+            ['product_id' => $product->id, 'quantity' => 1],
+        ]))->assertOk();
         $orderId = $owner->orders()->value('id');
 
         Sanctum::actingAs(User::factory()->create());

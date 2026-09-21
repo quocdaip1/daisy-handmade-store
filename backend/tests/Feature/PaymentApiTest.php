@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -70,14 +71,15 @@ class PaymentApiTest extends TestCase
 
     private function payload(Product $product, string $paymentMethod): array
     {
-        return [
-            'items' => [['product_id' => $product->id, 'quantity' => 1]],
-            'customer_name' => 'Khách Daisy',
-            'customer_email' => 'daisy@example.com',
-            'customer_phone' => '0901234567',
-            'shipping_address' => 'Hà Nội',
+        $items = [['product_id' => $product->id, 'quantity' => 1]];
+        if ($paymentMethod === 'bank_transfer') {
+            return $this->orderPayloadFromPreview($items);
+        }
+
+        return array_merge($this->orderPayloadFromPreview($items), [
+            'preview_id' => (string) Str::uuid(),
             'payment_method' => $paymentMethod,
-        ];
+        ]);
     }
 
     private function product(string $slug): Product
