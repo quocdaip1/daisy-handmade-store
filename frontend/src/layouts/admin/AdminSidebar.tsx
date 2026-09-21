@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { adminContentFeatures } from '../../config/adminContentFeatures'
 
 export function AdminSidebar() {
   return (
@@ -14,9 +15,9 @@ export function AdminSidebar() {
         <NavLink to="/admin/orders">Đơn hàng</NavLink>
         <NavLink to="/admin/customers">Khách hàng</NavLink>
         <NavLink to="/admin/coupons">Mã giảm giá</NavLink>
-        <NavLink to="/admin/content/banners">Banner</NavLink>
-        <NavLink to="/admin/content/contacts">Liên hệ</NavLink>
-        <NavLink to="/admin/content/policies">Chính sách</NavLink>
+        {adminContentFeatures.banners && <NavLink to="/admin/content/banners">Banner</NavLink>}
+        {adminContentFeatures.contacts && <NavLink to="/admin/content/contacts">Liên hệ</NavLink>}
+        {adminContentFeatures.policies && <NavLink to="/admin/content/policies">Chính sách</NavLink>}
         <NavLink to="/admin/settings">Cài đặt</NavLink>
       </nav>
       <NavLink className="admin-store-link" to="/">Về cửa hàng</NavLink>

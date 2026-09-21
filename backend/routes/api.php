@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\CommerceController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Middleware\EnsureAdminFeatureEnabled;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/products', [ProductController::class, 'index']);
@@ -73,14 +74,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/coupons', [AdminController::class, 'storeCoupon']);
         Route::put('/coupons/{coupon}', [AdminController::class, 'updateCoupon']);
         Route::delete('/coupons/{coupon}', [AdminController::class, 'destroyCoupon']);
-        Route::get('/banners', [AdminController::class, 'banners']);
-        Route::post('/banners', [AdminController::class, 'storeBanner']);
-        Route::put('/banners/{banner}', [AdminController::class, 'updateBanner']);
-        Route::get('/contacts', [AdminController::class, 'contacts']);
-        Route::get('/contacts/{contact}', [AdminController::class, 'showContact']);
-        Route::get('/policies', [AdminController::class, 'policies']);
-        Route::post('/policies', [AdminController::class, 'storePolicy']);
-        Route::put('/policies/{policy}', [AdminController::class, 'updatePolicy']);
+        Route::middleware(EnsureAdminFeatureEnabled::class.':banners')->group(function () {
+            Route::get('/banners', [AdminController::class, 'banners']);
+            Route::post('/banners', [AdminController::class, 'storeBanner']);
+            Route::put('/banners/{banner}', [AdminController::class, 'updateBanner']);
+        });
+        Route::middleware(EnsureAdminFeatureEnabled::class.':contacts')->group(function () {
+            Route::get('/contacts', [AdminController::class, 'contacts']);
+            Route::get('/contacts/{contact}', [AdminController::class, 'showContact']);
+        });
+        Route::middleware(EnsureAdminFeatureEnabled::class.':policies')->group(function () {
+            Route::get('/policies', [AdminController::class, 'policies']);
+            Route::post('/policies', [AdminController::class, 'storePolicy']);
+            Route::put('/policies/{policy}', [AdminController::class, 'updatePolicy']);
+        });
     });
 });
 

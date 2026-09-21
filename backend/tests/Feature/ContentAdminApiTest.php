@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Banner;
+use App\Models\Policy;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -23,6 +25,7 @@ class ContentAdminApiTest extends TestCase
 
     public function test_admin_can_manage_existing_banner_slots_without_new_schema(): void
     {
+        config()->set('admin_features.banners', true);
         Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
 
         $bannerId = $this->postJson('/api/admin/banners', [
@@ -44,6 +47,7 @@ class ContentAdminApiTest extends TestCase
 
     public function test_admin_can_read_contact_submissions_without_crm_workflow(): void
     {
+        config()->set('admin_features.contacts', true);
         $contactId = $this->postJson('/api/contacts', [
             'name' => 'Khách Daisy', 'email' => 'guest@example.com', 'phone' => '0901234567',
             'subject' => 'Tư vấn sản phẩm', 'message' => 'Tôi cần thông tin về bộ sưu tập.',
@@ -58,6 +62,7 @@ class ContentAdminApiTest extends TestCase
 
     public function test_admin_can_manage_policy_content_and_public_api_only_shows_published(): void
     {
+        config()->set('admin_features.policies', true);
         Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
 
         $policyId = $this->postJson('/api/admin/policies', [
@@ -74,5 +79,38 @@ class ContentAdminApiTest extends TestCase
         $this->getJson('/api/policies/doi-tra')->assertOk()->assertJsonPath('data.content', 'Nội dung đã cập nhật.');
         $this->postJson('/api/admin/policies', ['title' => '', 'slug' => 'doi-tra'])
             ->assertUnprocessable()->assertJsonValidationErrors(['title', 'slug', 'content', 'version']);
+    }
+
+    public function test_disabled_admin_content_endpoints_do_not_affect_public_content(): void
+    {
+        $banner = Banner::create([
+            'title' => 'Banner hiện có', 'image' => '/banners/home.webp',
+            'position' => 0, 'active' => true,
+        ]);
+        $policy = Policy::create([
+            'title' => 'Chính sách hiện có', 'slug' => 'chinh-sach-hien-co',
+            'content' => 'Nội dung đang hiển thị.', 'version' => 1, 'published' => true,
+        ]);
+        Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+        foreach (['banners', 'contacts', 'policies'] as $endpoint) {
+            $this->getJson("/api/admin/{$endpoint}")->assertNotFound();
+        }
+        $this->postJson('/api/admin/banners', [])->assertNotFound();
+        $this->putJson("/api/admin/banners/{$banner->id}", [])->assertNotFound();
+        $this->getJson('/api/admin/contacts/1')->assertNotFound();
+        $this->postJson('/api/admin/policies', [])->assertNotFound();
+        $this->putJson("/api/admin/policies/{$policy->id}", [])->assertNotFound();
+
+        $this->getJson('/api/banners')->assertOk()->assertJsonPath('data.0.id', $banner->id);
+        $this->getJson('/api/policies')->assertOk()->assertJsonPath('data.0.id', $policy->id);
+        $this->getJson('/api/policies/chinh-sach-hien-co')->assertOk();
+        $this->postJson('/api/contacts', [
+            'name' => 'Khách Daisy', 'email' => 'guest@example.com',
+            'subject' => 'Tư vấn sản phẩm', 'message' => 'Tôi cần tư vấn.',
+        ])->assertCreated();
+        $this->assertDatabaseHas('banners', ['id' => $banner->id, 'active' => true]);
+        $this->assertDatabaseHas('policies', ['id' => $policy->id, 'published' => true]);
+        $this->assertDatabaseCount('contacts', 1);
     }
 }

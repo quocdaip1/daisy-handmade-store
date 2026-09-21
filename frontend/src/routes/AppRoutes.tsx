@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedAdminRoute } from './ProtectedAdminRoute'
+import { adminContentFeatures } from '../config/adminContentFeatures'
 
 const AboutPage = lazy(() => import('../pages/AboutPage').then((module) => ({ default: module.AboutPage })))
 const CartPage = lazy(() => import('../pages/CartPage').then((module) => ({ default: module.CartPage })))
@@ -56,9 +57,13 @@ export function AppRoutes() {
             <Route path="customers" element={<CustomerListPage />} />
             <Route path="customers/:customerId" element={<CustomerDetailPage />} />
             <Route path="coupons" element={<CouponManagementPage />} />
-            <Route path="content/banners" element={<BannerManagementPage />} />
-            <Route path="content/contacts" element={<ContactManagementPage />} />
-            <Route path="content/policies" element={<PolicyManagementPage />} />
+            <Route path="content/banners" element={adminContentFeatures.banners ? <BannerManagementPage /> : <Navigate to="/admin" replace />} />
+            <Route path="content/contacts" element={adminContentFeatures.contacts ? <ContactManagementPage /> : <Navigate to="/admin" replace />} />
+            <Route path="content/policies" element={adminContentFeatures.policies ? <PolicyManagementPage /> : <Navigate to="/admin" replace />} />
+            {['banner', 'banners', 'contact', 'contacts', 'policy', 'policies'].map((path) => (
+              <Route key={path} path={path} element={<Navigate to="/admin" replace />} />
+            ))}
+            <Route path="content/*" element={<Navigate to="/admin" replace />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>
