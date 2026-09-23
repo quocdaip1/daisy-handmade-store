@@ -1,0 +1,29 @@
+.contact-popup-root { position: fixed; right: clamp(1rem, 3vw, 2rem); bottom: calc(1rem + env(safe-area-inset-bottom)); z-index: 25; display: grid; justify-items: end; gap: .8rem; pointer-events: none; }
+.contact-popup-backdrop { position: fixed; inset: 0; z-index: 0; border: 0; background: transparent; cursor: default; pointer-events: auto; }
+.contact-popup-toggle { position: relative; z-index: 1; display: grid; width: 3.5rem; height: 3.5rem; padding: 0; place-items: center; border: 1px solid rgba(255,255,255,.4); border-radius: 50%; background: var(--primary-strong); color: var(--white); box-shadow: 0 12px 30px rgba(55,47,24,.24); cursor: pointer; pointer-events: auto; transition: transform 160ms ease, box-shadow 160ms ease; }
+.contact-popup-toggle:hover { transform: translateY(-2px); box-shadow: 0 15px 34px rgba(55,47,24,.3); }
+.contact-popup-toggle:focus-visible { outline: 3px solid rgba(244,180,0,.45); outline-offset: 3px; }
+.contact-popup-toggle svg { width: 1.65rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.contact-popup-toggle > span { font-size: 1.8rem; line-height: 1; }
+.contact-popup-panel { position: relative; z-index: 1; width: min(22rem, calc(100vw - 2rem)); padding: 1.1rem; border: 1px solid var(--border); border-radius: 1.1rem; background: var(--white); box-shadow: 0 20px 55px rgba(55,47,24,.2); pointer-events: auto; animation: contact-popup-in 170ms ease-out; }
+.contact-popup-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
+.contact-popup-panel header span { color: var(--primary-strong); font-size: .7rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.contact-popup-panel h2 { margin-top: .15rem; color: var(--text); font-size: 1.35rem; }
+.contact-popup-panel header button { display: grid; flex: 0 0 2rem; width: 2rem; height: 2rem; padding: 0; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--cream); color: var(--text); font-size: 1.25rem; cursor: pointer; }
+.contact-popup-options { display: grid; gap: .65rem; }
+.contact-popup-options a { display: grid; grid-template-columns: 2.55rem minmax(0, 1fr) auto; align-items: center; gap: .75rem; min-height: 4rem; padding: .7rem; border: 1px solid var(--border); border-radius: .8rem; color: var(--text); text-decoration: none; transition: border-color 150ms ease, background 150ms ease; }
+.contact-popup-options a:hover { border-color: var(--primary); background: var(--accent-soft); }
+.contact-popup-options a > span:nth-child(2) { display: grid; min-width: 0; gap: .1rem; }
+.contact-popup-options strong { font-size: .9rem; }
+.contact-popup-options small { overflow: hidden; color: var(--text-muted); font-size: .75rem; text-overflow: ellipsis; white-space: nowrap; }
+.contact-popup-options i { color: var(--primary-strong); font-style: normal; }
+.contact-channel-icon { display: grid; width: 2.55rem; height: 2.55rem; place-items: center; border-radius: .7rem; color: #fff; font-size: 1.15rem; font-weight: 850; }
+.contact-channel-icon.is-facebook { background: #1877f2; font-family: Arial, sans-serif; font-size: 1.55rem; }
+.contact-channel-icon.is-zalo { background: #0877d1; }
+@keyframes contact-popup-in { from { opacity: 0; transform: translateY(.6rem) scale(.98); } to { opacity: 1; transform: none; } }
+@media (max-width: 600px) {
+  .contact-popup-root { right: .85rem; bottom: calc(.85rem + env(safe-area-inset-bottom)); }
+  .contact-popup-panel { width: min(21rem, calc(100vw - 1.7rem)); padding: 1rem; }
+  .contact-popup-toggle { width: 3.25rem; height: 3.25rem; }
+}
+@media (prefers-reduced-motion: reduce) { .contact-popup-panel { animation: none; }.contact-popup-toggle { transition: none; } }

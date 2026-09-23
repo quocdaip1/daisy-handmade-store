@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { Footer } from '../components/Footer'
 import { Header } from '../components/Header'
 import { SeoManager } from '../components/SeoManager'
+import { ContactPopup } from '../components/ContactPopup'
 
 interface MainLayoutProps { children: ReactNode }
 
@@ -13,5 +14,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [pathname])
 
-  return <div className="app-shell"><SeoManager /><Header /><main className="page-content">{children}</main><Footer /></div>
+  const isAdmin = pathname.startsWith('/admin')
+
+  return <div className="app-shell"><SeoManager /><Header /><main className="page-content">{children}</main><Footer />{!isAdmin ? <ContactPopup /> : null}</div>
 }

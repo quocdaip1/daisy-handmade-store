@@ -18,6 +18,7 @@ export function AdminSidebar() {
         {adminContentFeatures.banners && <NavLink to="/admin/content/banners">Banner</NavLink>}
         {adminContentFeatures.contacts && <NavLink to="/admin/content/contacts">Liên hệ</NavLink>}
         {adminContentFeatures.policies && <NavLink to="/admin/content/policies">Chính sách</NavLink>}
+        <NavLink to="/admin/settings/contact-popup">Liên hệ Facebook &amp; Zalo</NavLink>
         <NavLink to="/admin/settings">Cài đặt</NavLink>
       </nav>
       <NavLink className="admin-store-link" to="/">Về cửa hàng</NavLink>

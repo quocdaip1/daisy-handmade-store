@@ -29,6 +29,7 @@ const BannerManagementPage = lazy(() => import('../pages/admin/BannerManagementP
 const ContactManagementPage = lazy(() => import('../pages/admin/ContactManagementPage').then((module) => ({ default: module.ContactManagementPage })))
 const PolicyManagementPage = lazy(() => import('../pages/admin/PolicyManagementPage').then((module) => ({ default: module.PolicyManagementPage })))
 const SettingsPage = lazy(() => import('../pages/admin/SettingsPage').then((module) => ({ default: module.SettingsPage })))
+const ContactPopupSettingsPage = lazy(() => import('../pages/admin/ContactPopupSettingsPage').then((module) => ({ default: module.ContactPopupSettingsPage })))
 
 export function AppRoutes() {
   return (
@@ -64,6 +65,7 @@ export function AppRoutes() {
               <Route key={path} path={path} element={<Navigate to="/admin" replace />} />
             ))}
             <Route path="content/*" element={<Navigate to="/admin" replace />} />
+            <Route path="settings/contact-popup" element={<ContactPopupSettingsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>

@@ -26,6 +26,7 @@ Route::post('/contacts', [CommerceController::class, 'contact'])->middleware('th
 Route::get('/policies', [CommerceController::class, 'policies']);
 Route::get('/policies/{policy:slug}', [CommerceController::class, 'policy']);
 Route::get('/banners', [CommerceController::class, 'banners']);
+Route::get('/contact-popup', [CommerceController::class, 'contactPopup']);
 Route::get('/payments/bank-transfer/qr', [CommerceController::class, 'bankQr'])->name('payments.bank-qr');
 
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
@@ -50,6 +51,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard']);
         Route::get('/settings', [AdminSettingsController::class, 'show']);
         Route::put('/settings', [AdminSettingsController::class, 'update']);
+        Route::get('/settings/contact-popup', [AdminSettingsController::class, 'showContactPopup']);
+        Route::put('/settings/contact-popup', [AdminSettingsController::class, 'updateContactPopup']);
         Route::post('/settings/bank-qr', [AdminSettingsController::class, 'uploadBankQr']);
         Route::delete('/settings/bank-qr', [AdminSettingsController::class, 'deleteBankQr']);
         Route::get('/customers', [AdminController::class, 'customers']);

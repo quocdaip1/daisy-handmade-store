@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminBankQrRequest;
+use App\Http\Requests\AdminContactPopupSettingsRequest;
 use App\Http\Requests\AdminSettingsRequest;
 use App\Models\BankQrCode;
 use App\Models\ShippingMethod;
@@ -24,9 +25,15 @@ class AdminSettingsController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($data): void {
-            StoreSetting::current()->update(Arr::only($data, [
-                'shop_information', 'bank_account', 'social_links', 'seo_defaults',
-            ]));
+            $settings = StoreSetting::current();
+            $contactPopup = $settings->contactPopup();
+            $socialLinks = $data['social_links'];
+            $socialLinks['contact_popup'] = $contactPopup;
+
+            $settings->update([
+                ...Arr::only($data, ['shop_information', 'bank_account', 'seo_defaults']),
+                'social_links' => $socialLinks,
+            ]);
 
             $codes = collect($data['shipping_methods'])->pluck('code');
             ShippingMethod::query()->when(
@@ -43,6 +50,22 @@ class AdminSettingsController extends Controller
         });
 
         return $this->response(StoreSetting::current()->fresh());
+    }
+
+    public function showContactPopup(): JsonResponse
+    {
+        return response()->json(['data' => StoreSetting::current()->contactPopup()]);
+    }
+
+    public function updateContactPopup(AdminContactPopupSettingsRequest $request): JsonResponse
+    {
+        $settings = StoreSetting::current();
+        $settings->updateContactPopup($request->validated());
+
+        return response()->json([
+            'message' => 'Đã cập nhật thông tin liên hệ.',
+            'data' => $settings->fresh()->contactPopup(),
+        ]);
     }
 
     public function uploadBankQr(AdminBankQrRequest $request): JsonResponse

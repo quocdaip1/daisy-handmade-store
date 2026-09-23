@@ -20,12 +20,16 @@ class SettingsApiTest extends TestCase
     public function test_settings_require_admin_authorization(): void
     {
         $this->getJson('/api/admin/settings')->assertUnauthorized();
+        $this->getJson('/api/admin/settings/contact-popup')->assertUnauthorized();
+        $this->putJson('/api/admin/settings/contact-popup', $this->contactPopupPayload())->assertUnauthorized();
 
         Sanctum::actingAs(User::factory()->create(['role' => 'customer']));
         $this->getJson('/api/admin/settings')->assertForbidden();
         $this->putJson('/api/admin/settings', $this->payload())->assertForbidden();
         $this->post('/api/admin/settings/bank-qr', ['qr_image' => $this->qrImage()])->assertForbidden();
         $this->deleteJson('/api/admin/settings/bank-qr')->assertForbidden();
+        $this->getJson('/api/admin/settings/contact-popup')->assertForbidden();
+        $this->putJson('/api/admin/settings/contact-popup', $this->contactPopupPayload())->assertForbidden();
     }
 
     public function test_admin_can_read_and_update_all_setting_groups(): void
@@ -133,6 +137,75 @@ class SettingsApiTest extends TestCase
         ])->assertUnprocessable()->assertJsonValidationErrors('qr_image');
     }
 
+    public function test_admin_can_save_contact_popup_and_public_site_reads_only_display_data(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+
+        $this->getJson('/api/admin/settings/contact-popup')
+            ->assertOk()
+            ->assertJsonPath('data.facebook.enabled', false)
+            ->assertJsonPath('data.zalo.enabled', false);
+
+        $this->putJson('/api/admin/settings/contact-popup', $this->contactPopupPayload())
+            ->assertOk()
+            ->assertJsonPath('message', 'Đã cập nhật thông tin liên hệ.')
+            ->assertJsonPath('data.facebook.display_name', 'Daisy Shop')
+            ->assertJsonPath('data.facebook.enabled', true)
+            ->assertJsonPath('data.zalo.phone', '090 123 4567')
+            ->assertJsonPath('data.zalo.enabled', true);
+
+        $this->getJson('/api/admin/settings/contact-popup')
+            ->assertOk()
+            ->assertJsonPath('data.facebook.link', 'https://m.me/daisy')
+            ->assertJsonPath('data.zalo.phone', '090 123 4567');
+
+        $this->putJson('/api/admin/settings', $this->payload())->assertOk();
+        $this->getJson('/api/admin/settings/contact-popup')
+            ->assertJsonPath('data.facebook.display_name', 'Daisy Shop')
+            ->assertJsonPath('data.zalo.phone', '090 123 4567');
+
+        $this->getJson('/api/contact-popup')
+            ->assertOk()
+            ->assertJsonPath('data.facebook.link', 'https://m.me/daisy')
+            ->assertJsonPath('data.zalo.link', 'https://zalo.me/0901234567')
+            ->assertJsonMissingPath('data.facebook.id');
+
+        $oneChannel = $this->contactPopupPayload();
+        $oneChannel['facebook']['enabled'] = false;
+        $oneChannel['zalo']['link'] = 'https://zalo.me/daisy-shop';
+        $this->putJson('/api/admin/settings/contact-popup', $oneChannel)->assertOk();
+        $this->getJson('/api/contact-popup')
+            ->assertJsonPath('data.facebook.enabled', false)
+            ->assertJsonPath('data.zalo.enabled', true)
+            ->assertJsonPath('data.zalo.link', 'https://zalo.me/daisy-shop');
+
+        $oneChannel['zalo']['enabled'] = false;
+        $this->putJson('/api/admin/settings/contact-popup', $oneChannel)->assertOk();
+        $this->getJson('/api/contact-popup')
+            ->assertJsonPath('data.facebook.enabled', false)
+            ->assertJsonPath('data.zalo.enabled', false);
+    }
+
+    public function test_contact_popup_validation_prevents_broken_enabled_channels(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+        $payload = $this->contactPopupPayload();
+        $payload['facebook']['link'] = '';
+        $payload['zalo']['phone'] = '';
+        $payload['zalo']['link'] = '';
+
+        $this->putJson('/api/admin/settings/contact-popup', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['facebook.link', 'zalo.phone']);
+
+        $payload['facebook']['enabled'] = false;
+        $payload['zalo']['enabled'] = false;
+        $this->putJson('/api/admin/settings/contact-popup', $payload)
+            ->assertOk()
+            ->assertJsonPath('data.facebook.enabled', false)
+            ->assertJsonPath('data.zalo.enabled', false);
+    }
+
     private function payload(): array
     {
         return [
@@ -155,6 +228,23 @@ class SettingsApiTest extends TestCase
             'seo_defaults' => [
                 'title' => 'Daisy Handmade Store', 'description' => 'Trang sức thủ công Việt Nam',
                 'keywords' => 'trang sức, thủ công', 'og_image_url' => 'https://example.com/og.jpg',
+            ],
+        ];
+    }
+
+    private function contactPopupPayload(): array
+    {
+        return [
+            'facebook' => [
+                'display_name' => 'Daisy Shop',
+                'link' => 'https://m.me/daisy',
+                'enabled' => true,
+            ],
+            'zalo' => [
+                'display_name' => 'Daisy Shop',
+                'phone' => '090 123 4567',
+                'link' => '',
+                'enabled' => true,
             ],
         ];
     }

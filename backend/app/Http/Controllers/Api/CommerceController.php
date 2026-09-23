@@ -7,6 +7,7 @@ use App\Models\BankQrCode;
 use App\Models\Banner;
 use App\Models\Contact;
 use App\Models\Policy;
+use App\Models\StoreSetting;
 use Illuminate\Http\Request;
 
 class CommerceController extends Controller
@@ -47,5 +48,30 @@ class CommerceController extends Controller
     public function banners()
     {
         return response()->json(['data' => Banner::where('active', true)->orderBy('position')->get()]);
+    }
+
+    public function contactPopup()
+    {
+        $contactPopup = StoreSetting::current()->contactPopup();
+        $zaloPhone = preg_replace('/\D+/', '', (string) $contactPopup['zalo']['phone']);
+        $zaloLink = trim((string) $contactPopup['zalo']['link']);
+
+        if ($zaloLink === '' && $zaloPhone !== '') {
+            $zaloLink = 'https://zalo.me/'.$zaloPhone;
+        }
+
+        return response()->json(['data' => [
+            'facebook' => [
+                'display_name' => $contactPopup['facebook']['display_name'],
+                'link' => $contactPopup['facebook']['link'],
+                'enabled' => (bool) $contactPopup['facebook']['enabled'],
+            ],
+            'zalo' => [
+                'display_name' => $contactPopup['zalo']['display_name'],
+                'phone' => $contactPopup['zalo']['phone'],
+                'link' => $zaloLink,
+                'enabled' => (bool) $contactPopup['zalo']['enabled'],
+            ],
+        ]]);
     }
 }
