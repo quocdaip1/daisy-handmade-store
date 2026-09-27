@@ -26,13 +26,13 @@ class AdminSettingsController extends Controller
 
         DB::transaction(function () use ($data): void {
             $settings = StoreSetting::current();
-            $contactPopup = $settings->contactPopup();
-            $socialLinks = $data['social_links'];
-            $socialLinks['contact_popup'] = $contactPopup;
+            $socialLinks = array_replace_recursive($settings->socialLinks(), $data['social_links']);
 
             $settings->update([
-                ...Arr::only($data, ['shop_information', 'bank_account', 'seo_defaults']),
+                'shop_information' => array_replace($settings->shopInformation(), $data['shop_information']),
+                'bank_account' => array_replace($settings->bankAccount(), $data['bank_account']),
                 'social_links' => $socialLinks,
+                'seo_defaults' => array_replace($settings->seoDefaults(), $data['seo_defaults']),
             ]);
 
             $codes = collect($data['shipping_methods'])->pluck('code');
@@ -91,13 +91,13 @@ class AdminSettingsController extends Controller
     private function response(StoreSetting $settings): JsonResponse
     {
         return response()->json(['data' => [
-            'shop_information' => $settings->shop_information,
-            'bank_account' => array_merge($settings->bank_account, [
+            'shop_information' => $settings->shopInformation(),
+            'bank_account' => array_merge($settings->bankAccount(), [
                 'qr_image_url' => BankQrCode::publicUrl(),
             ]),
             'shipping_methods' => ShippingMethod::query()->orderBy('name')->get(),
-            'social_links' => $settings->social_links,
-            'seo_defaults' => $settings->seo_defaults,
+            'social_links' => $settings->socialLinks(),
+            'seo_defaults' => $settings->seoDefaults(),
         ]]);
     }
 }

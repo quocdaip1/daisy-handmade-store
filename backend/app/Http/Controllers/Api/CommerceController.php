@@ -52,26 +52,19 @@ class CommerceController extends Controller
 
     public function contactPopup()
     {
-        $contactPopup = StoreSetting::current()->contactPopup();
-        $zaloPhone = preg_replace('/\D+/', '', (string) $contactPopup['zalo']['phone']);
-        $zaloLink = trim((string) $contactPopup['zalo']['link']);
+        return response()->json(['data' => StoreSetting::current()->publicContactPopup()]);
+    }
 
-        if ($zaloLink === '' && $zaloPhone !== '') {
-            $zaloLink = 'https://zalo.me/'.$zaloPhone;
-        }
+    public function siteSettings()
+    {
+        $settings = StoreSetting::current();
+        $socialLinks = $settings->socialLinks();
+        $socialLinks['contact_popup'] = $settings->publicContactPopup();
 
         return response()->json(['data' => [
-            'facebook' => [
-                'display_name' => $contactPopup['facebook']['display_name'],
-                'link' => $contactPopup['facebook']['link'],
-                'enabled' => (bool) $contactPopup['facebook']['enabled'],
-            ],
-            'zalo' => [
-                'display_name' => $contactPopup['zalo']['display_name'],
-                'phone' => $contactPopup['zalo']['phone'],
-                'link' => $zaloLink,
-                'enabled' => (bool) $contactPopup['zalo']['enabled'],
-            ],
-        ]]);
+            'shop_information' => $settings->shopInformation(),
+            'social_links' => $socialLinks,
+            'seo_defaults' => $settings->seoDefaults(),
+        ]])->header('Cache-Control', 'no-store');
     }
 }

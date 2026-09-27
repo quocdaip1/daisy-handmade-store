@@ -1,7 +1,7 @@
 import { apiUrl } from '../config/api'
 import type { ContactPopupSettings } from '../types/contact-popup'
 
-interface ApiContactPopupSettings {
+export interface ApiContactPopupSettings {
   facebook?: { display_name?: string; link?: string; enabled?: boolean }
   zalo?: { display_name?: string; phone?: string; link?: string; enabled?: boolean }
 }

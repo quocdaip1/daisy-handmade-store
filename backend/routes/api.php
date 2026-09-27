@@ -27,6 +27,7 @@ Route::get('/policies', [CommerceController::class, 'policies']);
 Route::get('/policies/{policy:slug}', [CommerceController::class, 'policy']);
 Route::get('/banners', [CommerceController::class, 'banners']);
 Route::get('/contact-popup', [CommerceController::class, 'contactPopup']);
+Route::get('/site-settings', [CommerceController::class, 'siteSettings']);
 Route::get('/payments/bank-transfer/qr', [CommerceController::class, 'bankQr'])->name('payments.bank-qr');
 
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');

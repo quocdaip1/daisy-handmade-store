@@ -50,6 +50,8 @@ class SettingsApiTest extends TestCase
             ->assertJsonPath('data.bank_account.bank_name', 'ACB')
             ->assertJsonPath('data.shipping_methods.1.code', 'standard')
             ->assertJsonPath('data.social_links.facebook', 'https://facebook.com/daisy')
+            ->assertJsonPath('data.social_links.contact_popup.facebook.display_name', 'Daisy Shop')
+            ->assertJsonPath('data.social_links.contact_popup.zalo.enabled', true)
             ->assertJsonPath('data.seo_defaults.title', 'Daisy Handmade Store');
 
         $this->assertDatabaseHas('shipping_methods', ['code' => 'standard', 'fee' => 30000, 'active' => true]);
@@ -79,6 +81,22 @@ class SettingsApiTest extends TestCase
         $this->assertSame('DAISY DS-SETTING-1', $payment->metadata['transfer_content']);
     }
 
+    public function test_settings_can_be_saved_when_shipping_is_disabled(): void
+    {
+        ShippingMethod::create([
+            'name' => 'Giao cũ', 'code' => 'legacy', 'fee' => 50000, 'active' => true,
+        ]);
+        Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+        $payload = $this->payload();
+        $payload['shipping_methods'] = [];
+
+        $this->putJson('/api/admin/settings', $payload)
+            ->assertOk()
+            ->assertJsonPath('data.shipping_methods.0.active', false);
+
+        $this->assertDatabaseHas('shipping_methods', ['code' => 'legacy', 'active' => false]);
+    }
+
     public function test_settings_validation_rejects_invalid_configuration(): void
     {
         Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
@@ -86,6 +104,7 @@ class SettingsApiTest extends TestCase
         $payload['bank_account']['bank_name'] = '';
         $payload['shipping_methods'][0]['fee'] = -1;
         $payload['social_links']['facebook'] = 'not-a-url';
+        $payload['social_links']['contact_popup']['facebook']['link'] = 'not-a-url';
         $payload['seo_defaults']['description'] = str_repeat('a', 161);
 
         $this->putJson('/api/admin/settings', $payload)
@@ -94,6 +113,7 @@ class SettingsApiTest extends TestCase
                 'bank_account.bank_name',
                 'shipping_methods.0.fee',
                 'social_links.facebook',
+                'social_links.contact_popup.facebook.link',
                 'seo_defaults.description',
             ]);
     }
@@ -159,10 +179,19 @@ class SettingsApiTest extends TestCase
             ->assertJsonPath('data.facebook.link', 'https://m.me/daisy')
             ->assertJsonPath('data.zalo.phone', '090 123 4567');
 
-        $this->putJson('/api/admin/settings', $this->payload())->assertOk();
+        $legacyPayload = $this->payload();
+        unset($legacyPayload['social_links']['contact_popup']);
+        $this->putJson('/api/admin/settings', $legacyPayload)->assertOk();
         $this->getJson('/api/admin/settings/contact-popup')
             ->assertJsonPath('data.facebook.display_name', 'Daisy Shop')
             ->assertJsonPath('data.zalo.phone', '090 123 4567');
+
+        $this->getJson('/api/site-settings')
+            ->assertOk()
+            ->assertHeader('cache-control', 'no-store, private')
+            ->assertJsonPath('data.shop_information.name', 'Daisy Handmade')
+            ->assertJsonPath('data.social_links.contact_popup.facebook.link', 'https://m.me/daisy')
+            ->assertJsonPath('data.seo_defaults.title', 'Daisy Handmade Store');
 
         $this->getJson('/api/contact-popup')
             ->assertOk()
@@ -224,6 +253,7 @@ class SettingsApiTest extends TestCase
             'social_links' => [
                 'facebook' => 'https://facebook.com/daisy', 'instagram' => '',
                 'tiktok' => '', 'youtube' => '', 'messenger' => '',
+                'contact_popup' => $this->contactPopupPayload(),
             ],
             'seo_defaults' => [
                 'title' => 'Daisy Handmade Store', 'description' => 'Trang sức thủ công Việt Nam',

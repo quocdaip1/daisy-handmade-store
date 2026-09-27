@@ -1,11 +1,12 @@
 import { apiUrl } from '../../config/api'
+import { mapContactPopup, type ApiContactPopupSettings } from '../contact-popup'
 import type { AdminSettings } from '../../types/admin-settings'
 
 interface ApiSettings {
   shop_information: { name: string; email?: string; phone?: string; address?: string; opening_hours?: string }
   bank_account: { bank_name: string; account_number: string; account_owner: string; transfer_prefix: string; qr_image_url?: string | null }
   shipping_methods: Array<{ id: number; name: string; code: string; fee: number | string; free_threshold?: number | string | null; active: boolean }>
-  social_links: { facebook?: string; instagram?: string; tiktok?: string; youtube?: string; messenger?: string }
+  social_links: { facebook?: string; instagram?: string; tiktok?: string; youtube?: string; messenger?: string; contact_popup?: ApiContactPopupSettings }
   seo_defaults: { title: string; description?: string; keywords?: string; og_image_url?: string }
 }
 
@@ -45,11 +46,13 @@ function mapSettings(settings: ApiSettings): AdminSettings {
       active: method.active,
     })),
     socialLinks: {
-      facebook: settings.social_links.facebook ?? '',
       instagram: settings.social_links.instagram ?? '',
       tiktok: settings.social_links.tiktok ?? '',
       youtube: settings.social_links.youtube ?? '',
-      messenger: settings.social_links.messenger ?? '',
+      contactPopup: mapContactPopup(settings.social_links.contact_popup ?? {
+        facebook: { display_name: '', link: '', enabled: false },
+        zalo: { display_name: '', phone: '', link: '', enabled: false },
+      }),
     },
     seoDefaults: {
       title: settings.seo_defaults.title,
@@ -82,7 +85,24 @@ function payload(settings: AdminSettings) {
       free_threshold: method.freeThreshold ?? null,
       active: method.active,
     })),
-    social_links: settings.socialLinks,
+    social_links: {
+      instagram: settings.socialLinks.instagram,
+      tiktok: settings.socialLinks.tiktok,
+      youtube: settings.socialLinks.youtube,
+      contact_popup: {
+        facebook: {
+          display_name: settings.socialLinks.contactPopup.facebook.displayName,
+          link: settings.socialLinks.contactPopup.facebook.link,
+          enabled: settings.socialLinks.contactPopup.facebook.enabled,
+        },
+        zalo: {
+          display_name: settings.socialLinks.contactPopup.zalo.displayName,
+          phone: settings.socialLinks.contactPopup.zalo.phone,
+          link: settings.socialLinks.contactPopup.zalo.link,
+          enabled: settings.socialLinks.contactPopup.zalo.enabled,
+        },
+      },
+    },
     seo_defaults: {
       title: settings.seoDefaults.title,
       description: settings.seoDefaults.description,

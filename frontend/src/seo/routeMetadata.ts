@@ -4,6 +4,11 @@ export interface RouteMetadata {
   robots?: 'index, follow' | 'noindex, nofollow'
 }
 
+export interface SeoDefaults {
+  title: string
+  description: string
+}
+
 const brand = 'Daisy Handmade Store'
 
 const metadata: Record<string, RouteMetadata> = {
@@ -29,10 +34,11 @@ const policies: Record<string, RouteMetadata> = {
   'huong-dan-mua-hang': { title: `Hướng dẫn mua hàng | ${brand}`, description: 'Hướng dẫn chọn sản phẩm, đặt hàng và thanh toán tại Daisy Handmade Store.' },
 }
 
-export function getRouteMetadata(pathname: string): RouteMetadata {
-  if (pathname === '/admin/settings/contact-popup') return { title: `Liên hệ Facebook & Zalo | ${brand}`, description: 'Quản lý thông tin liên hệ Facebook và Zalo của cửa hàng.', robots: 'noindex, nofollow' }
+export function getRouteMetadata(pathname: string, defaults?: SeoDefaults): RouteMetadata {
+  if (pathname === '/admin/settings') return { title: `Cài đặt cửa hàng | ${brand}`, description: 'Quản lý cấu hình cửa hàng Daisy.', robots: 'noindex, nofollow' }
   if (pathname.startsWith('/san-pham/')) return { title: `Chi tiết trang sức | ${brand}`, description: 'Xem hình ảnh, thông tin và tình trạng của sản phẩm trang sức thủ công Daisy.' }
   if (pathname.startsWith('/don-hang/')) return { ...metadata['/don-hang'], title: `Chi tiết đơn hàng | ${brand}` }
   if (pathname.startsWith('/chinh-sach/')) return policies[pathname.split('/').pop() ?? ''] ?? metadata['/404']
+  if (pathname === '/' && defaults?.title.trim()) return { title: defaults.title, description: defaults.description }
   return metadata[pathname] ?? metadata['/404']
 }

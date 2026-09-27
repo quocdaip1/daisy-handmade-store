@@ -24,11 +24,10 @@ export interface ShippingMethodSettings {
 }
 
 export interface SocialLinkSettings {
-  facebook: string
   instagram: string
   tiktok: string
   youtube: string
-  messenger: string
+  contactPopup: ContactPopupSettings
 }
 
 export interface SeoDefaultSettings {
@@ -45,3 +44,4 @@ export interface AdminSettings {
   socialLinks: SocialLinkSettings
   seoDefaults: SeoDefaultSettings
 }
+import type { ContactPopupSettings } from './contact-popup'
