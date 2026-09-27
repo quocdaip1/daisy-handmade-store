@@ -30,6 +30,7 @@ const policies: Record<string, RouteMetadata> = {
 }
 
 export function getRouteMetadata(pathname: string): RouteMetadata {
+  if (pathname === '/admin/settings/contact-popup') return { title: `Liên hệ Facebook & Zalo | ${brand}`, description: 'Quản lý thông tin liên hệ Facebook và Zalo của cửa hàng.', robots: 'noindex, nofollow' }
   if (pathname.startsWith('/san-pham/')) return { title: `Chi tiết trang sức | ${brand}`, description: 'Xem hình ảnh, thông tin và tình trạng của sản phẩm trang sức thủ công Daisy.' }
   if (pathname.startsWith('/don-hang/')) return { ...metadata['/don-hang'], title: `Chi tiết đơn hàng | ${brand}` }
   if (pathname.startsWith('/chinh-sach/')) return policies[pathname.split('/').pop() ?? ''] ?? metadata['/404']

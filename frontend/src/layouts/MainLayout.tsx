@@ -15,6 +15,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   }, [pathname])
 
   const isAdmin = pathname.startsWith('/admin')
+  const isCheckout = pathname === '/thanh-toan'
 
-  return <div className="app-shell"><SeoManager /><Header /><main className="page-content">{children}</main><Footer />{!isAdmin ? <ContactPopup /> : null}</div>
+  return <div className="app-shell"><SeoManager /><Header /><main className="page-content">{children}</main><Footer />{!isAdmin && !isCheckout ? <ContactPopup /> : null}</div>
 }
