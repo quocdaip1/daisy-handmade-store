@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import { ContactSocialSettings } from '../../components/admin/ContactSocialSettings'
+import { features } from '../../config/features'
 import { AdminSettingsRequestError, deleteBankQr, fetchAdminSettings, updateAdminSettings, uploadBankQr } from '../../services/admin/settings'
 import type { AdminSettings } from '../../types/admin-settings'
 import './contact-popup-settings.css'
@@ -73,8 +74,10 @@ export function SettingsPage() {
     if (zalo.phone.trim() && !phonePattern.test(zalo.phone.trim())) next['social_links.contact_popup.zalo.phone'] = ['Số điện thoại Zalo không hợp lệ.']
     if (!isHttpUrl(zalo.link)) next['social_links.contact_popup.zalo.link'] = ['Link Zalo không hợp lệ.']
     for (const network of ['instagram', 'tiktok', 'youtube'] as const) if (!isHttpUrl(current.socialLinks[network])) next[`social_links.${network}`] = ['Đường dẫn mạng xã hội không hợp lệ.']
-    if (!current.seoDefaults.title.trim()) next['seo_defaults.title'] = ['Vui lòng nhập tiêu đề SEO.']
-    if (!isHttpUrl(current.seoDefaults.ogImageUrl)) next['seo_defaults.og_image_url'] = ['URL ảnh chia sẻ không hợp lệ.']
+    if (features.adminSeoSettings) {
+      if (!current.seoDefaults.title.trim()) next['seo_defaults.title'] = ['Vui lòng nhập tiêu đề SEO.']
+      if (!isHttpUrl(current.seoDefaults.ogImageUrl)) next['seo_defaults.og_image_url'] = ['URL ảnh chia sẻ không hợp lệ.']
+    }
     return next
   }
 
@@ -176,12 +179,12 @@ export function SettingsPage() {
 
         <fieldset id="contact-social"><legend>Liên hệ &amp; mạng xã hội</legend><ContactSocialSettings settings={settings.socialLinks} errors={errors} onChange={(socialLinks) => setSettings({ ...settings, socialLinks })} /></fieldset>
 
-        <fieldset><legend>SEO mặc định</legend><div className="admin-settings-grid">
+        {features.adminSeoSettings ? <fieldset><legend>SEO mặc định</legend><div className="admin-settings-grid">
           <label className="admin-settings-wide">Tiêu đề mặc định<input value={settings.seoDefaults.title} maxLength={60} onChange={(event) => setSettings({ ...settings, seoDefaults: { ...settings.seoDefaults, title: event.target.value } })} />{fieldError('seo_defaults.title') ? <small>{fieldError('seo_defaults.title')}</small> : null}</label>
           <label className="admin-settings-wide">Mô tả mặc định<textarea value={settings.seoDefaults.description} maxLength={160} rows={3} onChange={(event) => setSettings({ ...settings, seoDefaults: { ...settings.seoDefaults, description: event.target.value } })} />{fieldError('seo_defaults.description') ? <small>{fieldError('seo_defaults.description')}</small> : null}</label>
           <label>Từ khóa<input value={settings.seoDefaults.keywords} maxLength={255} onChange={(event) => setSettings({ ...settings, seoDefaults: { ...settings.seoDefaults, keywords: event.target.value } })} /></label>
           <label>URL ảnh chia sẻ<input type="url" value={settings.seoDefaults.ogImageUrl} maxLength={2048} onChange={(event) => setSettings({ ...settings, seoDefaults: { ...settings.seoDefaults, ogImageUrl: event.target.value } })} />{fieldError('seo_defaults.og_image_url') ? <small>{fieldError('seo_defaults.og_image_url')}</small> : null}</label>
-        </div></fieldset>
+        </div></fieldset> : null}
         <div className="admin-settings-actions"><button type="submit" disabled={isSaving}>{isSaving ? 'Đang lưu...' : 'Lưu cấu hình'}</button></div>
       </form>
     </section>
