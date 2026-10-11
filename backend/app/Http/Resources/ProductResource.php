@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\ProductImageUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -22,7 +23,7 @@ class ProductResource extends JsonResource
             'material' => $this->material,
             'color' => $this->color,
             'stock' => $this->stock,
-            'images' => $this->images ?? [],
+            'images' => array_map(ProductImageUrl::publicUrl(...), $this->images ?? []),
             'featured' => $this->featured,
             'is_new' => $this->is_new,
             'rating' => $this->rating,

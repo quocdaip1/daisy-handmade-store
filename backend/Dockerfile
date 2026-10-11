@@ -26,4 +26,4 @@ RUN php artisan package:discover --ansi \
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force && apache2-foreground"]
+CMD ["sh", "-c", "mkdir -p storage/app/public && chown www-data:www-data storage/app/public && php artisan storage:link --force && php artisan migrate --force && php artisan db:seed --force && apache2-foreground"]

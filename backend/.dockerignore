@@ -3,4 +3,6 @@
 database/database.sqlite
 node_modules
 storage/logs/*
+public/storage
+storage/app/public/*
 vendor

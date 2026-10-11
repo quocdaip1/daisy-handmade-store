@@ -23,10 +23,11 @@ use App\Models\Policy;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\OrderService;
+use App\Services\ProductImageStorage;
+use App\Support\ProductImageUrl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -165,10 +166,12 @@ class AdminController extends Controller
     public function upload(Request $request, Product $product): JsonResponse
     {
         $data = $request->validate(['images' => ['required', 'array', 'max:8'], 'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120']]);
-        $paths = collect($data['images'])->map(fn ($file) => Storage::disk('public')->url($file->store('products', 'public')));
-        $product->update(['images' => array_values(array_merge($product->images ?? [], $paths->all()))]);
+        DB::transaction(function () use ($data, $product): void {
+            $paths = collect($data['images'])->map(fn ($file) => app(ProductImageStorage::class)->store($file));
+            $product->update(['images' => array_values(array_merge($product->images ?? [], $paths->all()))]);
+        });
 
-        return response()->json(['data' => $product->images]);
+        return response()->json(['data' => array_map(ProductImageUrl::publicUrl(...), $product->images)]);
     }
 
     public function categories(): JsonResponse
