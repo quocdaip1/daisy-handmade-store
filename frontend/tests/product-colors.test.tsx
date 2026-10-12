@@ -27,7 +27,7 @@ function CartSummary() {
 }
 
 function Detail() {
-  return <MemoryRouter initialEntries={['/san-pham/colors']}><CartProvider><Routes><Route path="/san-pham/:slug" element={<ProductDetailPage />} /></Routes><CartSummary /></CartProvider></MemoryRouter>
+  return <MemoryRouter initialEntries={['/san-pham/colors']}><CartProvider><Routes><Route path="/san-pham/:slug" element={<ProductDetailPage />} /><Route path="/thanh-toan" element={<h1>Checkout</h1>} /></Routes><CartSummary /></CartProvider></MemoryRouter>
 }
 
 function Gallery() {
@@ -45,25 +45,52 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('product colors', () => {
-  it('shows total before selection, changes gallery/stock, caps quantity and keeps two colors after remount', async () => {
+  it('hides total stock, shows selected color stock, caps quantity and keeps two colors after remount', async () => {
     const user = userEvent.setup()
     const view = render(<Detail />)
-    await screen.findByText('Còn 5 sản phẩm · Tổng tồn')
+    await screen.findByText('Color product', { selector: 'h1' })
+    expect(screen.queryByText(/Tổng tồn/)).toBeNull()
+    expect(screen.queryByText(/Còn 5 sản phẩm/)).toBeNull()
+    expect((screen.getByRole('spinbutton') as HTMLInputElement).value).toBe('1')
+    expect(screen.queryByText('Điểm đánh giá')).toBeNull()
+    expect(screen.queryByText('Hoàn thiện thủ công')).toBeNull()
+    expect(screen.queryByText(/Đổi trả trong 7 ngày|Đóng gói quà tặng|Tư vấn tận tâm/)).toBeNull()
+    expect(screen.queryByText('Legacy')).toBeNull()
+    expect(screen.getByRole('region', { name: 'Thông tin chi tiết' }).textContent).toContain('Silver')
     expect((screen.getByRole('button', { name: 'Mua ngay' }) as HTMLButtonElement).disabled).toBe(true)
     await user.click(screen.getByRole('button', { name: /Red/ }))
+    expect(screen.getByText('Còn 3 sản phẩm · Red')).toBeTruthy()
     expect(screen.getByAltText('Color product').getAttribute('src')).toBe('/red.png')
     fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '99' } })
     expect((screen.getByRole('spinbutton') as HTMLInputElement).value).toBe('3')
     await user.click(screen.getByRole('button', { name: 'Thêm vào giỏ hàng' }))
     await user.click(screen.getByRole('button', { name: /Blue/ }))
     expect(screen.getByAltText('Color product').getAttribute('src')).toBe('/blue.png')
+    expect((screen.getByRole('spinbutton') as HTMLInputElement).value).toBe('2')
+    expect(screen.getByText('Còn 2 sản phẩm · Blue')).toBeTruthy()
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '1' } })
     await user.click(screen.getByRole('button', { name: 'Thêm vào giỏ hàng' }))
     expect(screen.getByTestId('cart').textContent).toBe('1:10:Red:3|1:11:Blue:1')
     await user.click(screen.getByRole('button', { name: /Empty/ }))
     expect((screen.getByRole('button', { name: 'Mua ngay' }) as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByRole('button', { name: 'Tạm hết hàng' }) as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.getByTestId('cart').textContent).toBe('1:10:Red:3|1:11:Blue:1')
     view.unmount()
     render(<Detail />)
     await waitFor(() => expect(screen.getByTestId('cart').textContent).toBe('1:10:Red:3|1:11:Blue:1'))
+  })
+
+  it('buys one selected item and navigates to checkout without taking the full stock', async () => {
+    const user = userEvent.setup()
+    vi.mocked(fetchProductDetail).mockResolvedValue({ ...product, shortDescription: 'Short summary' })
+    render(<Detail />)
+    await screen.findByText('Short summary')
+    expect(screen.getByRole('region', { name: 'Thông tin chi tiết' }).textContent).toContain('Description')
+    await user.click(screen.getByRole('button', { name: /Red/ }))
+    expect((screen.getByRole('spinbutton') as HTMLInputElement).value).toBe('1')
+    await user.click(screen.getByRole('button', { name: 'Mua ngay' }))
+    await screen.findByRole('heading', { name: 'Checkout' })
+    expect(screen.getByTestId('cart').textContent).toBe('1:10:Red:1')
   })
 
   it('keeps legacy shared products purchasable without inventing colors', async () => {
@@ -72,6 +99,7 @@ describe('product colors', () => {
     await screen.findByText('Color product', { selector: 'h1' })
     expect((screen.getByRole('button', { name: 'Mua ngay' }) as HTMLButtonElement).disabled).toBe(false)
     expect(screen.queryByRole('button', { name: /Red/ })).toBeNull()
+    expect(screen.queryByText(/Tổng tồn|Còn 5 sản phẩm/)).toBeNull()
   })
 })
 

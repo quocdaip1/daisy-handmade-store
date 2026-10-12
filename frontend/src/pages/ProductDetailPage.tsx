@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ProductColorSelector } from '../components/ProductColorSelector'
+import { ProductDetailInformation } from '../components/ProductDetailInformation'
 import { selectedStock } from '../utils/productSelection'
 import { ProductGrid } from '../components/ProductGrid'
 import { CartContext } from '../context/CartContext'
@@ -83,16 +84,25 @@ export function ProductDetailPage() {
     return <div className="empty-state"><h1>Không tìm thấy sản phẩm</h1><p>Sản phẩm có thể đã ngừng kinh doanh hoặc đường dẫn không còn tồn tại.</p><Link to="/san-pham" className="button button-primary">Quay lại cửa hàng</Link></div>
   }
 
-  const selectedVariant = product.variants?.find((variant) => variant.id === selectedVariantId)
+  const selectedVariant = product.variants?.find((variant) => variant.id === selectedVariantId && variant.active)
   const gallery = selectedVariant?.images.length ? selectedVariant.images : product.images
   const images = gallery.length ? gallery : ['']
   const stock = selectedVariant ? selectedStock(product, selectedVariant) : product.stock
   const canBuy = stock > 0 && (product.inventoryMode !== 'variant' || Boolean(selectedVariant))
-  const selectColor = (id?: number) => { setSelectedVariantId(id); setSelectedImage(0); setQuantity(1); setIsZoomOpen(false) }
+  const selectColor = (id?: number) => {
+    const variant = product.variants?.find((candidate) => candidate.id === id && candidate.active)
+    const nextStock = selectedStock(product, variant)
+    setSelectedVariantId(id)
+    setSelectedImage(0)
+    setQuantity((current) => Math.max(1, Math.min(current, nextStock)))
+    setIsZoomOpen(false)
+  }
   const currentImage = images[Math.min(selectedImage, images.length - 1)]
   const hasDiscount = Boolean(product.originalPrice && product.originalPrice > product.price)
   const discount = hasDiscount && product.originalPrice ? Math.round((1 - product.price / product.originalPrice) * 100) : 0
   const inStock = stock > 0
+  const needsColor = product.inventoryMode === 'variant' && !selectedVariant
+  const summary = product.shortDescription.trim() || product.description
   const changeQuantity = (next: number) => setQuantity(Math.max(1, Math.min(stock, Math.max(1, Number.isFinite(next) ? Math.floor(next) : 1))))
   const buyNow = () => { if (!canBuy) return; addToCart(product, quantity, selectedVariantId); navigate('/thanh-toan') }
 
@@ -112,21 +122,18 @@ export function ProductDetailPage() {
         </section>
 
         <section className="product-detail-info">
-          <div className="detail-heading-row"><p className="eyebrow">{product.material}</p>{product.isNew ? <span className="detail-new-badge">Mới</span> : null}</div>
+          {product.isNew ? <span className="detail-new-badge">Mới</span> : null}
           <h1>{product.name}</h1>
-          <div className="detail-rating"><span aria-hidden="true">★★★★★</span><strong>{product.rating.toFixed(1)}</strong><small>Điểm đánh giá</small></div>
-          <p className="detail-description">{product.description}</p>
+          <p className="detail-description">{summary}</p>
 
           <div className="detail-price-section"><div><strong>{formatCurrency(product.price)}</strong>{hasDiscount && product.originalPrice ? <span>{formatCurrency(product.originalPrice)}</span> : null}</div>{discount > 0 ? <b>Tiết kiệm {discount}%</b> : null}</div>
-          <div className={`inventory-status ${inStock ? 'in-stock' : 'out-of-stock'}`} aria-live="polite"><i aria-hidden="true" /><div><strong>{inStock ? 'Còn hàng' : 'Tạm hết hàng'}</strong><small>{`Còn ${stock} sản phẩm · ${selectedVariant ? selectedVariant.colorName : 'Tổng tồn'}`}{selectedVariant && product.inventoryMode !== 'variant' ? ' · Tồn chung, chưa phân bổ theo màu' : ''}</small></div></div>
-          <dl className="detail-specifications"><div><dt>Chất liệu</dt><dd>{product.material}</dd></div><div><dt>Màu sắc</dt><dd>{product.color}</dd></div><div><dt>Chế tác</dt><dd>Hoàn thiện thủ công</dd></div></dl>
-
           <ProductColorSelector variants={product.variants ?? []} mode={product.inventoryMode ?? 'shared'} selectedId={selectedVariantId} onSelect={selectColor} />
+          {!needsColor ? <div className={`inventory-status ${inStock ? 'in-stock' : 'out-of-stock'}`} aria-live="polite"><i aria-hidden="true" /><div><strong>{inStock ? 'Còn hàng' : 'Tạm hết hàng'}</strong>{selectedVariant && product.inventoryMode === 'variant' ? <small>{`Còn ${stock} sản phẩm · ${selectedVariant.colorName}`}</small> : null}</div></div> : null}
           <div className="detail-purchase-area">
             <div className="detail-quantity"><span>Số lượng</span><div><button type="button" onClick={() => changeQuantity(quantity - 1)} disabled={quantity <= 1} aria-label="Giảm số lượng">−</button><input aria-label="Số lượng sản phẩm" type="number" min="1" max={Math.max(1, stock)} value={quantity} disabled={!canBuy} onChange={(event) => changeQuantity(Number(event.target.value) || 1)} /><button type="button" onClick={() => changeQuantity(quantity + 1)} disabled={!canBuy || quantity >= stock} aria-label="Tăng số lượng">+</button></div></div>
             <div className="detail-actions"><button type="button" className="button detail-add-cart" onClick={() => addToCart(product, quantity, selectedVariantId)} disabled={!canBuy}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h2l2.3 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L21 7H6M12 9v4M10 11h4" /></svg>{!inStock ? 'Tạm hết hàng' : canBuy ? 'Thêm vào giỏ hàng' : 'Vui lòng chọn màu'}</button><button type="button" className="button button-primary detail-buy-now" onClick={buyNow} disabled={!canBuy}>Mua ngay</button></div>
           </div>
-          <div className="detail-assurances"><span>✦ Đổi trả trong 7 ngày</span><span>✦ Đóng gói quà tặng</span><span>✦ Tư vấn tận tâm</span></div>
+          <ProductDetailInformation material={product.material} description={summary !== product.description ? product.description : undefined} />
         </section>
       </div>
 

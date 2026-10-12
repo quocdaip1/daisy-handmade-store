@@ -8,12 +8,13 @@ interface Props {
 }
 
 export function ProductColorSelector({ variants, mode, selectedId, onSelect }: Props) {
-  if (!variants.length) return null
+  const activeVariants = variants.filter((variant) => variant.active)
+  if (!activeVariants.length) return null
   return <fieldset className="product-color-selector">
     <legend>Màu sắc</legend>
-    <div><button type="button" aria-pressed={selectedId === undefined} onClick={() => onSelect(undefined)}>Xem tất cả màu</button>
-      {variants.filter((variant) => variant.active).map((variant) => <button type="button" key={variant.id} aria-pressed={selectedId === variant.id} onClick={() => onSelect(variant.id)}>
-        {variant.colorName}<small>{mode === 'shared' ? 'Tồn chung' : variant.stock === null ? 'Chưa nhập tồn' : variant.stock === 0 ? 'Hết hàng' : `Còn ${variant.stock}`}</small>
+    <div>
+      {activeVariants.map((variant) => <button type="button" key={variant.id} aria-pressed={selectedId === variant.id} onClick={() => onSelect(variant.id)}>
+        {variant.colorName}{mode === 'variant' && (variant.stock === null || variant.stock === 0) ? <small>{variant.stock === null ? 'Chưa nhập tồn' : 'Hết hàng'}</small> : null}
       </button>)}
     </div>
     {mode === 'variant' && selectedId === undefined && <p>Vui lòng chọn màu trước khi thêm vào giỏ hàng.</p>}
