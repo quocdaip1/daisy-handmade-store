@@ -7,6 +7,19 @@ use Illuminate\Validation\Rule;
 
 class AdminProductRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if (is_array($this->input('variants'))) {
+            $this->merge(['variants' => array_map(function ($row) {
+                if (is_array($row) && is_string($row['color_name'] ?? null)) {
+                    $row['color_name'] = trim($row['color_name']);
+                }
+
+                return $row;
+            }, $this->input('variants'))]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user()?->isAdmin() === true;
@@ -28,7 +41,17 @@ class AdminProductRequest extends FormRequest
             'material' => ['required', 'string', 'max:255'],
             'color' => ['required', 'string', 'max:255'],
             'stock' => ['required', 'integer', 'min:0'],
-            'images' => ['sometimes', 'array', 'max:8'],
+            'inventory_mode' => ['sometimes', Rule::in(['shared', 'variant'])],
+            'confirm_stock_adjustment' => ['sometimes', 'boolean'],
+            'variants' => ['sometimes', 'array', 'max:50'],
+            'variants.*.id' => ['sometimes', 'integer', 'distinct'],
+            'variants.*.color_name' => ['required', 'string', 'max:100', 'distinct:ignore_case'],
+            'variants.*.stock' => ['nullable', 'integer', 'min:0'],
+            'variants.*.active' => ['sometimes', 'boolean'],
+            'variants.*.images' => ['sometimes', 'array', 'max:'.\App\Services\ProductGalleryService::MAX_IMAGES],
+            'variants.*.images.*' => ['string', 'max:2048'],
+            'images' => ['sometimes', 'array', 'max:'.\App\Services\ProductGalleryService::MAX_IMAGES],
+            'cover_image' => ['sometimes', 'nullable', 'string', 'max:2048'],
             'images.*' => ['string', 'max:2048'],
             'featured' => ['sometimes', 'boolean'],
             'is_new' => ['sometimes', 'boolean'],

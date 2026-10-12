@@ -1,5 +1,7 @@
 import { useContext, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ProductColorSelector } from '../components/ProductColorSelector'
+import { selectedStock } from '../utils/productSelection'
 import { ProductGrid } from '../components/ProductGrid'
 import { CartContext } from '../context/CartContext'
 import { fetchProductDetail, fetchRelatedProducts } from '../services/api'
@@ -13,6 +15,7 @@ export function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const [product, setProduct] = useState<Product | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
+  const [selectedVariantId, setSelectedVariantId] = useState<number>()
   const [selectedImage, setSelectedImage] = useState(0)
   const [isZoomOpen, setIsZoomOpen] = useState(false)
   const [loadedSlug, setLoadedSlug] = useState<string | null>(null)
@@ -28,6 +31,7 @@ export function ProductDetailPage() {
     void fetchProductDetail(slug).then((fetchedProduct) => {
       if (!active) return
       setProduct(fetchedProduct)
+      setSelectedVariantId(undefined)
       setSelectedImage(0)
       setQuantity(1)
       setIsZoomOpen(false)
@@ -79,13 +83,18 @@ export function ProductDetailPage() {
     return <div className="empty-state"><h1>Không tìm thấy sản phẩm</h1><p>Sản phẩm có thể đã ngừng kinh doanh hoặc đường dẫn không còn tồn tại.</p><Link to="/san-pham" className="button button-primary">Quay lại cửa hàng</Link></div>
   }
 
-  const images = product.images.length ? product.images : ['']
+  const selectedVariant = product.variants?.find((variant) => variant.id === selectedVariantId)
+  const gallery = selectedVariant?.images.length ? selectedVariant.images : product.images
+  const images = gallery.length ? gallery : ['']
+  const stock = selectedVariant ? selectedStock(product, selectedVariant) : product.stock
+  const canBuy = stock > 0 && (product.inventoryMode !== 'variant' || Boolean(selectedVariant))
+  const selectColor = (id?: number) => { setSelectedVariantId(id); setSelectedImage(0); setQuantity(1); setIsZoomOpen(false) }
   const currentImage = images[Math.min(selectedImage, images.length - 1)]
   const hasDiscount = Boolean(product.originalPrice && product.originalPrice > product.price)
   const discount = hasDiscount && product.originalPrice ? Math.round((1 - product.price / product.originalPrice) * 100) : 0
-  const inStock = product.stock > 0
-  const changeQuantity = (next: number) => setQuantity(Math.min(product.stock, Math.max(1, next)))
-  const buyNow = () => { addToCart(product, quantity); navigate('/thanh-toan') }
+  const inStock = stock > 0
+  const changeQuantity = (next: number) => setQuantity(Math.max(1, Math.min(stock, Math.max(1, Number.isFinite(next) ? Math.floor(next) : 1))))
+  const buyNow = () => { if (!canBuy) return; addToCart(product, quantity, selectedVariantId); navigate('/thanh-toan') }
 
   return (
     <article className="product-detail-page daisy-product-detail">
@@ -109,12 +118,13 @@ export function ProductDetailPage() {
           <p className="detail-description">{product.description}</p>
 
           <div className="detail-price-section"><div><strong>{formatCurrency(product.price)}</strong>{hasDiscount && product.originalPrice ? <span>{formatCurrency(product.originalPrice)}</span> : null}</div>{discount > 0 ? <b>Tiết kiệm {discount}%</b> : null}</div>
-          <div className={`inventory-status ${inStock ? 'in-stock' : 'out-of-stock'}`}><i aria-hidden="true" /><div><strong>{inStock ? 'Còn hàng' : 'Tạm hết hàng'}</strong><small>{inStock ? `Còn ${product.stock} sản phẩm · Sẵn sàng giao` : 'Liên hệ Daisy để được thông báo khi có hàng'}</small></div></div>
+          <div className={`inventory-status ${inStock ? 'in-stock' : 'out-of-stock'}`} aria-live="polite"><i aria-hidden="true" /><div><strong>{inStock ? 'Còn hàng' : 'Tạm hết hàng'}</strong><small>{`Còn ${stock} sản phẩm · ${selectedVariant ? selectedVariant.colorName : 'Tổng tồn'}`}{selectedVariant && product.inventoryMode !== 'variant' ? ' · Tồn chung, chưa phân bổ theo màu' : ''}</small></div></div>
           <dl className="detail-specifications"><div><dt>Chất liệu</dt><dd>{product.material}</dd></div><div><dt>Màu sắc</dt><dd>{product.color}</dd></div><div><dt>Chế tác</dt><dd>Hoàn thiện thủ công</dd></div></dl>
 
+          <ProductColorSelector variants={product.variants ?? []} mode={product.inventoryMode ?? 'shared'} selectedId={selectedVariantId} onSelect={selectColor} />
           <div className="detail-purchase-area">
-            <div className="detail-quantity"><span>Số lượng</span><div><button type="button" onClick={() => changeQuantity(quantity - 1)} disabled={quantity <= 1} aria-label="Giảm số lượng">−</button><input aria-label="Số lượng sản phẩm" type="number" min="1" max={Math.max(1, product.stock)} value={quantity} disabled={!inStock} onChange={(event) => changeQuantity(Number(event.target.value) || 1)} /><button type="button" onClick={() => changeQuantity(quantity + 1)} disabled={!inStock || quantity >= product.stock} aria-label="Tăng số lượng">+</button></div></div>
-            <div className="detail-actions"><button type="button" className="button detail-add-cart" onClick={() => addToCart(product, quantity)} disabled={!inStock}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h2l2.3 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L21 7H6M12 9v4M10 11h4" /></svg>{inStock ? 'Thêm vào giỏ hàng' : 'Tạm hết hàng'}</button><button type="button" className="button button-primary detail-buy-now" onClick={buyNow} disabled={!inStock}>Mua ngay</button></div>
+            <div className="detail-quantity"><span>Số lượng</span><div><button type="button" onClick={() => changeQuantity(quantity - 1)} disabled={quantity <= 1} aria-label="Giảm số lượng">−</button><input aria-label="Số lượng sản phẩm" type="number" min="1" max={Math.max(1, stock)} value={quantity} disabled={!canBuy} onChange={(event) => changeQuantity(Number(event.target.value) || 1)} /><button type="button" onClick={() => changeQuantity(quantity + 1)} disabled={!canBuy || quantity >= stock} aria-label="Tăng số lượng">+</button></div></div>
+            <div className="detail-actions"><button type="button" className="button detail-add-cart" onClick={() => addToCart(product, quantity, selectedVariantId)} disabled={!canBuy}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h2l2.3 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L21 7H6M12 9v4M10 11h4" /></svg>{!inStock ? 'Tạm hết hàng' : canBuy ? 'Thêm vào giỏ hàng' : 'Vui lòng chọn màu'}</button><button type="button" className="button button-primary detail-buy-now" onClick={buyNow} disabled={!canBuy}>Mua ngay</button></div>
           </div>
           <div className="detail-assurances"><span>✦ Đổi trả trong 7 ngày</span><span>✦ Đóng gói quà tặng</span><span>✦ Tư vấn tận tâm</span></div>
         </section>

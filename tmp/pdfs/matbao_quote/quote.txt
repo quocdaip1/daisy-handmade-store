@@ -1,0 +1,225 @@
+=== PAGE 1 ===
+ 
+ 
+Trang 1/2 
+ 
+12A đường Núi Thành, phường 13, 
+quận Tân Bình, TP HCM 
+ Tel:+84-28-36229999 
+    Fax:+84-28-38680083 
+ www.matbao.net 
+  
+BÁO GIÁ DỊCH VỤ PREMIUM CLOUD HOSTING 
+Kính gửi:  
+Người gửi: Bùi Huỳnh Phi 
+Công ty:  
+Đơn vị: Phòng Tư vấn 
+Điện thoại:  
+Điện thoại: (028) 36229999 Ext: 5114 
+Di động:  
+Di động: 0971 918 565 
+Email:   
+Email:  phibh@matbao.com 
+ 
+MÔ TẢ 
+CƠ BẢN 
+(BASIC) 
+TIẾT KIỆM 
+(EXTEND) 
+THIẾT YẾU 
+(ESSENTIAL) 
+CỬA HÀNG 
+(SHOP) 
+DOANH 
+NGHIỆP 
+(BUSINESS) 
+THƯƠNG MẠI 
+ĐIỆN TỬ 
+(ECOM) 
+I. MÔ TẢ CHI TIẾT DỊCH VỤ 
+Web Server 
+LiteSpeed 
+LiteSpeed 
+LiteSpeed 
+LiteSpeed 
+LiteSpeed 
+LiteSpeed 
+Bảng điều khiển 
+Plesk / 
+DirectAdmin 
+Plesk / 
+DirectAdmin 
+Plesk / 
+DirectAdmin 
+Plesk / 
+DirectAdmin 
+Plesk / 
+DirectAdmin 
+Plesk / 
+DirectAdmin 
+CPU 
+1.0 
+1.0 
+1.0 
+1.5 
+2.0 
+3.0 
+RAM 
+512 MB 
+786 MB 
+1024 MB 
+1536 MB 
+12048 MB 
+3072 MB 
+Dung lượng 
+1,500 MB 
+3,000 MB 
+6,000 MB 
+10,000 MB 
+15,000 MB 
+20,000 MB 
+IOPS 
+1024 
+1024 
+1024 
+2048 
+2048 
+2048 
+MySQL 
+2 
+2 
+4 
+6 
+8 
+10 
+Website 
+1 
+1 
+2 
+3 
+4 
+5 
+Park/Subdomain 
+Không giới hạn 
+Không giới hạn 
+Không giới hạn 
+Không giới hạn 
+Không giới hạn 
+Không giới hạn 
+Băng thông 
+20 GB 
+Không giới hạn 
+Không giới hạn 
+Không giới hạn 
+Không giới hạn 
+Không giới hạn 
+SSL 
+✓ 
+✓ 
+✓ 
+✓ 
+✓ 
+✓ 
+Hỗ trợ kỹ thuật 
+24/7 
+24/7 
+24/7 
+24/7 
+24/7 
+24/7 
+Sao lưu tự động 
+✓ 
+✓ 
+✓ 
+✓ 
+✓ 
+✓ 
+II. PHÍ KHỞI TẠO DỊCH VỤ & CƯỚC HÀNG THÁNG (VND) 
+1. Phí tháng (giá chưa VAT) 
+49,000 
+79,000 
+99,000 
+149,000 
+269,000 
+399,000 
+
+
+=== PAGE 2 ===
+ 
+ 
+Trang 2/2 
+2. Chi phí 1 năm  
+646,800 
+1,042,800 
+1,306,800 
+1,966,800 
+3,550,800 
+5,266,800 
+3. Chi phí 2 năm (giảm 5%) 
+1,228,920 
+1,981,320 
+2,482,920 
+3,736,920 
+6,746,520 
+10,006,920 
+4. Chi phí 3 năm (giảm 10%) 
+1,746,360 
+2,815,560 
+3,528,360 
+5,310,360 
+9,587,160 
+14,220,360 
+5. Chi phí 5 năm (giảm 15%) 
+2,748,900 
+4,431,900 
+5,553,900 
+8,358,900 
+15,090,900 
+22,383,900 
+Giá trên đã gồm VAT 10% 
+3. Phí khởi tạo 
+Miễn Phí 
+Miễn Phí 
+Miễn Phí 
+Miễn Phí 
+Miễn Phí 
+Miễn Phí 
+III. HỢP ĐỒNG 
+1. Thời hạn hợp đồng tối thiểu 
+01 năm 
+2. Thanh toán 
+100% giá trị hợp đồng 
+III. LỢI THẾ CỦA DỊCH VỤ PREMIUM CLOUD HOSTING TẠI MẮT BÃO 
+- Công nghệ LiteSpeed hỗ trợ Rewrite (chuyển hướng URL) hiệu quả hơn  
+- Tốc độ xử lý file tĩnh nhanh gấp 6 lần Apache  
+- Tốc độ xử lý PHP nhanh hơn Apache 3 lần  
+- Cloudlinux (LVE) phân chia tài nguyên tối ưu  
+- Hệ thống sao lưu tự động trên hosting  
+- Giao thức kết nối truyền tải dữ liệu Http/2 & Http/3  
+- Giao thức kết nối Internet nhanh Quick Server UDP Internet 
+ 
+ 
+PHƯƠNG THỨC THANH TOÁN 
+Tiền mặt 
+12A đường Núi Thành, phường 13, quận Tân Bình, TP HCM 
+Chuyển khoản (Lấy hóa đơn 
+GTGT) 
+Ngân hàng: BIDV - Chi nhánh Hàm Nghi 
+Công ty Cổ phần Mắt Bão 
+Số tài khoản: 
+18610007079999 
+Chuyển khoản (Lấy hóa đơn 
+GTGT) 
+Ngân hàng Eximbank- PGD Trương Định 
+Công ty Cổ phần Mắt Bão 
+Số tài khoản: 
+210814851189999 
+Sau khi thanh toán chuyển khoản vui lòng xác nhận thanh toán vào địa chỉ Email: phibh@matbao.com để chúng tôi có thông tin đăng ký dịch vụ. 
+Dịch vụ chỉ được đăng ký sau khi có xác nhận thanh toán và các thủ tục hợp đồng đầy đủ 
+ 
+THÔNG TIN HỖ TRỢ 
+Hỗ trợ kỹ thuật 
+Tổng đài Kỹ thuật - 1900 1830 
+Yêu cầu (Ticket) gửi từ id.matbao.net 
+Giờ làm việc: Từ thứ 2 đến Chủ nhật 24/7 
+ 

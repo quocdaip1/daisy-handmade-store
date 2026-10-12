@@ -1,0 +1,17 @@
+HTTP/1.1 204 No Content
+Date: Sun, 11 Oct 2026 08:34:20 GMT
+Connection: keep-alive
+access-control-allow-headers: authorization
+access-control-allow-methods: POST
+access-control-allow-origin: https://frontend-jade-zeta-89.vercel.app
+access-control-max-age: 0
+Cache-Control: no-cache, private
+rndr-id: c381bfbc-a13d-4fee
+Server: cloudflare
+vary: Access-Control-Request-Method,Access-Control-Request-Headers
+x-powered-by: PHP/8.3.35
+x-render-origin-server: Apache/2.4.68 (Debian)
+cf-cache-status: DYNAMIC
+CF-RAY: a48c866ffe9903ab-HKG
+alt-svc: h3=":443"; ma=86400
+

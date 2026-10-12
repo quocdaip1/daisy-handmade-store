@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
@@ -25,6 +26,8 @@ class Product extends Model
         'rating',
         'sku',
         'status',
+        'inventory_mode',
+        'cover_image',
     ];
 
     protected $casts = [
@@ -42,9 +45,31 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class)->orderBy('id');
+    }
+
+    public function availableStock(): int
+    {
+        return $this->inventory_mode === 'variant'
+            ? (int) $this->variants->where('active', true)->sum('stock')
+            : $this->stock;
+    }
+
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('status', 'published');
+    }
+
+    public function scopeLowStock(Builder $query, int $maximum): Builder
+    {
+        return $query->where(fn (Builder $query) => $query
+            ->where(fn (Builder $query) => $query->where('inventory_mode', 'shared')->where('stock', '<=', $maximum))
+            ->orWhere(fn (Builder $query) => $query->where('inventory_mode', 'variant')->whereRaw(
+                '(SELECT COALESCE(SUM(stock), 0) FROM product_variants WHERE product_variants.product_id = products.id AND active = ?) <= ?',
+                [true, $maximum],
+            )));
     }
 
     public function scopeSearch(Builder $query, ?string $term): Builder

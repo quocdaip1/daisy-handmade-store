@@ -23,7 +23,8 @@ use App\Models\Policy;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\OrderService;
-use App\Services\ProductImageStorage;
+use App\Services\ProductGalleryService;
+use App\Services\ProductAdminService;
 use App\Support\ProductImageUrl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -66,7 +67,7 @@ class AdminController extends Controller
             'customers' => User::query()->where('role', 'customer')->count(),
             'products' => Product::query()->count(),
             'published_products' => Product::query()->where('status', 'published')->count(),
-            'low_stock_products' => Product::query()->where('status', 'published')->where('stock', '<=', 5)->count(),
+            'low_stock_products' => Product::query()->where('status', 'published')->lowStock(5)->count(),
             'active_coupons' => Coupon::query()->where('active', true)->count(),
             'best_sellers' => $bestSellers,
         ]]);
@@ -129,7 +130,7 @@ class AdminController extends Controller
     public function products(Request $request)
     {
         $data = $request->validate(['search' => ['nullable', 'string', 'max:100'], 'status' => ['nullable', Rule::in(['draft', 'published', 'inactive'])], 'per_page' => ['nullable', 'integer', 'min:1', 'max:50']]);
-        $products = Product::query()->with('category')
+        $products = Product::query()->with(['category', 'variants'])
             ->when($data['search'] ?? null, fn ($query, $search) => $query->where('name', 'like', "%{$search}%"))
             ->when($data['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->latest()->paginate($request->integer('per_page', 15))->withQueryString();
@@ -139,21 +140,21 @@ class AdminController extends Controller
 
     public function showProduct(Product $product): AdminProductResource
     {
-        return new AdminProductResource($product->load('category'));
+        return new AdminProductResource($product->load(['category', 'variants']));
     }
 
     public function storeProduct(AdminProductRequest $request): JsonResponse
     {
-        $product = Product::create($request->validated());
+        $product = app(ProductAdminService::class)->save($request->validated());
 
-        return response()->json(['data' => new AdminProductResource($product->load('category'))], 201);
+        return response()->json(['data' => new AdminProductResource($product->load(['category', 'variants']))], 201);
     }
 
     public function updateProduct(AdminProductRequest $request, Product $product): JsonResponse
     {
-        $product->update($request->validated());
+        $product = app(ProductAdminService::class)->save($request->validated(), $product);
 
-        return response()->json(['data' => new AdminProductResource($product->fresh()->load('category'))]);
+        return response()->json(['data' => new AdminProductResource($product->fresh()->load(['category', 'variants']))]);
     }
 
     public function destroyProduct(Product $product): JsonResponse
@@ -165,13 +166,10 @@ class AdminController extends Controller
 
     public function upload(Request $request, Product $product): JsonResponse
     {
-        $data = $request->validate(['images' => ['required', 'array', 'max:8'], 'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120']]);
-        DB::transaction(function () use ($data, $product): void {
-            $paths = collect($data['images'])->map(fn ($file) => app(ProductImageStorage::class)->store($file));
-            $product->update(['images' => array_values(array_merge($product->images ?? [], $paths->all()))]);
-        });
+        $data = $request->validate(['images' => ['required', 'array', 'max:'.ProductGalleryService::MAX_IMAGES], 'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120']]);
+        $images = app(ProductGalleryService::class)->upload($product, $data['images']);
 
-        return response()->json(['data' => array_map(ProductImageUrl::publicUrl(...), $product->images)]);
+        return response()->json(['data' => array_map(ProductImageUrl::publicUrl(...), $images)]);
     }
 
     public function categories(): JsonResponse

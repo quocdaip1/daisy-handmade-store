@@ -1,6 +1,7 @@
 import { useContext } from 'react'
 import { Link } from 'react-router-dom'
 import { CartContext } from '../context/CartContext'
+import { cartItemStock, cartItemImage, productSelectionKey } from '../utils/productSelection'
 import { formatCurrency } from '../utils/formatCurrency'
 
 export function CartPage() {
@@ -20,22 +21,23 @@ export function CartPage() {
       <div className="cart-page">
         <div className="cart-list">
           {cartItems.map((item) => {
-            const image = item.product.images[0]
-            const atMaximum = item.quantity >= item.product.stock
-            return <article key={item.product.id} className="cart-item modern-cart-item">
+            const image = cartItemImage(item)
+            const atMaximum = item.quantity >= cartItemStock(item)
+            return <article key={productSelectionKey(item.product.id, item.variantId)} className="cart-item modern-cart-item">
               <Link to={`/san-pham/${item.product.slug}`} className="cart-item-image-link">{image ? <img src={image} alt={item.product.name} className="cart-item-image" loading="lazy" decoding="async" /> : <span className="cart-image-placeholder" aria-hidden="true">✿</span>}</Link>
               <div className="cart-item-info">
                 <p className="product-meta">{item.product.material}</p>
                 <Link to={`/san-pham/${item.product.slug}`} className="cart-item-name">{item.product.name}</Link>
+                {item.colorName && <p>Màu: {item.colorName}</p>}
                 <p className="cart-unit-price">{formatCurrency(item.product.price)} / món</p>
                 <div className="cart-controls" aria-label={`Số lượng ${item.product.name}`}>
-                  <button type="button" onClick={() => updateQuantity(item.product.id, item.quantity - 1)} aria-label={`Giảm số lượng ${item.product.name}`}>−</button>
+                  <button type="button" onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.variantId)} aria-label={`Giảm số lượng ${item.product.name}`}>−</button>
                   <span aria-live="polite">{item.quantity}</span>
-                  <button type="button" onClick={() => updateQuantity(item.product.id, item.quantity + 1)} disabled={atMaximum} aria-label={`Tăng số lượng ${item.product.name}`}>+</button>
+                  <button type="button" onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.variantId)} disabled={atMaximum} aria-label={`Tăng số lượng ${item.product.name}`}>+</button>
                 </div>
                 {atMaximum ? <small>Đã đạt số lượng tối đa theo dữ liệu tồn kho hiện tại</small> : null}
               </div>
-              <div className="cart-item-total"><strong>{formatCurrency(item.product.price * item.quantity)}</strong><button type="button" onClick={() => removeFromCart(item.product.id)} aria-label={`Xóa ${item.product.name} khỏi giỏ hàng`}>Xóa</button></div>
+              <div className="cart-item-total"><strong>{formatCurrency(item.product.price * item.quantity)}</strong><button type="button" onClick={() => removeFromCart(item.product.id, item.variantId)} aria-label={`Xóa ${item.product.name} khỏi giỏ hàng`}>Xóa</button></div>
             </article>
           })}
           <Link to="/san-pham" className="cart-continue-link">← Tiếp tục mua sắm</Link>

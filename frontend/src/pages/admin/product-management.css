@@ -57,3 +57,9 @@
   .admin-product-form-panel { padding: 1rem; }
   .admin-product-form-panel footer { bottom: -1rem; margin: 0 -1rem -1rem; padding: 1rem; }
 }
+
+.admin-variant-editor { display: grid; gap: 1rem; margin: 1rem 0; min-width: 0; }
+.admin-variant-row { display: grid; gap: .75rem; padding: 1rem; border: 1px solid var(--admin-border); border-radius: .75rem; min-width: 0; }
+.admin-variant-images { display: flex; flex-wrap: wrap; gap: .75rem; }
+.admin-variant-images label { width: 90px; }
+.admin-variant-images img { width: 80px; height: 80px; object-fit: cover; }

@@ -1,0 +1,64 @@
+.admin-orders-page, .admin-order-detail-page { display: grid; gap: 1.25rem; }
+.admin-orders-heading, .admin-order-detail-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.admin-orders-heading p, .admin-orders-heading h1, .admin-order-detail-heading p, .admin-order-detail-heading h1 { margin: 0; }
+.admin-orders-heading p, .admin-order-detail-heading p { color: var(--admin-muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+.admin-orders-heading h1, .admin-order-detail-heading h1 { margin: .25rem 0; font-size: clamp(1.6rem, 3vw, 2.25rem); }
+.admin-orders-heading span, .admin-order-detail-heading div > span { color: var(--admin-muted); }
+.admin-orders-toolbar { display: grid; grid-template-columns: minmax(18rem, 1fr) minmax(11rem, 15rem); gap: 1rem; padding: 1rem; border: 1px solid var(--admin-border); border-radius: .75rem; background: var(--admin-paper); }
+.admin-orders-toolbar form, .admin-orders-toolbar label { display: grid; gap: .4rem; color: var(--admin-muted); font-size: .8rem; font-weight: 700; }
+.admin-orders-toolbar form > div { display: flex; }
+.admin-orders-toolbar input, .admin-orders-toolbar select, .admin-order-update-card input, .admin-order-update-card select { width: 100%; min-height: 2.65rem; padding: .6rem .7rem; border: 1px solid var(--admin-border); border-radius: .45rem; background: #fff; color: var(--admin-ink); font: inherit; }
+.admin-orders-toolbar form input { border-radius: .45rem 0 0 .45rem; }
+.admin-orders-toolbar form button { border-radius: 0 .45rem .45rem 0; }
+.admin-orders-toolbar button, .admin-orders-error button, .admin-order-pagination button, .admin-order-update-card button, .admin-order-detail-link { min-height: 2.5rem; padding: .55rem 1rem; border: 1px solid var(--admin-border); border-radius: .5rem; background: #fff; color: var(--admin-ink); cursor: pointer; text-decoration: none; }
+.admin-orders-error, .admin-orders-success { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .8rem 1rem; border: 1px solid #eccaca; border-radius: .6rem; background: #fff5f5; color: #8f2020; }
+.admin-orders-success { border-color: #bcdcc5; background: #f0faf3; color: #246b38; }
+.admin-order-state { padding: 3rem 1rem; border: 1px dashed var(--admin-border); border-radius: .75rem; background: var(--admin-paper); color: var(--admin-muted); text-align: center; }
+.admin-order-table-wrap { overflow-x: auto; border: 1px solid var(--admin-border); border-radius: .75rem; background: var(--admin-paper); }
+.admin-order-table { width: 100%; min-width: 64rem; border-collapse: collapse; }
+.admin-order-table th, .admin-order-table td { padding: .9rem 1rem; border-bottom: 1px solid var(--admin-border); text-align: left; vertical-align: middle; }
+.admin-order-table th { color: var(--admin-muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+.admin-order-table tbody tr:last-child td { border-bottom: 0; }
+.admin-order-identity { display: grid; gap: .2rem; }
+.admin-order-identity small { color: var(--admin-muted); }
+.admin-order-status { display: inline-flex; padding: .3rem .55rem; border-radius: 999px; background: #eee9e7; color: #695d58; font-size: .78rem; font-weight: 700; white-space: nowrap; }
+.admin-order-status.is-pending { background: #fff1cf; color: #805c09; }
+.admin-order-status.is-confirmed, .admin-order-status.is-preparing { background: #e7effb; color: #295b91; }
+.admin-order-status.is-shipping { background: #eee9fc; color: #60469a; }
+.admin-order-status.is-completed { background: #e4f5e9; color: #246b38; }
+.admin-order-status.is-cancelled, .admin-order-status.is-returned { background: #f8e6e6; color: #8f2020; }
+.admin-order-detail-link { display: inline-flex; align-items: center; }
+.admin-order-pagination { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; }
+.admin-order-pagination button:disabled, .admin-order-update-card button:disabled { cursor: not-allowed; opacity: .55; }
+.admin-order-breadcrumb { display: flex; gap: .5rem; color: var(--admin-muted); font-size: .85rem; }
+.admin-order-breadcrumb a { color: var(--admin-accent); }
+.admin-order-detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem); gap: 1.25rem; align-items: start; }
+.admin-order-detail-main { display: grid; gap: 1.25rem; }
+.admin-order-card { padding: 1.25rem; border: 1px solid var(--admin-border); border-radius: .75rem; background: var(--admin-paper); }
+.admin-order-card h2 { margin: 0 0 1rem; font-size: 1.1rem; }
+.admin-order-item { display: flex; justify-content: space-between; gap: 1rem; padding: .85rem 0; border-bottom: 1px solid var(--admin-border); }
+.admin-order-item div { display: grid; gap: .25rem; }
+.admin-order-item small { color: var(--admin-muted); }
+.admin-order-totals { display: grid; gap: .6rem; padding-top: 1rem; }
+.admin-order-totals div { display: flex; justify-content: space-between; gap: 1rem; }
+.admin-order-totals .is-total { padding-top: .75rem; border-top: 1px solid var(--admin-border); font-size: 1.05rem; }
+.admin-order-card dl { display: grid; gap: .75rem; margin: 0; }
+.admin-order-card dl div { display: grid; grid-template-columns: 8rem 1fr; gap: 1rem; }
+.admin-order-card dt { color: var(--admin-muted); }
+.admin-order-card dd { margin: 0; overflow-wrap: anywhere; }
+.admin-order-update-card { position: sticky; top: 1rem; }
+.admin-order-update-card form, .admin-order-update-card label { display: grid; gap: .8rem; }
+.admin-order-update-card label { gap: .4rem; color: var(--admin-muted); font-size: .82rem; font-weight: 700; }
+.admin-order-update-card small { color: #9d2525; }
+.admin-order-update-card button { border-color: var(--admin-accent); background: var(--admin-accent); color: #fff; }
+
+@media (max-width: 900px) {
+  .admin-order-detail-grid { grid-template-columns: 1fr; }
+  .admin-order-update-card { position: static; }
+}
+
+@media (max-width: 760px) {
+  .admin-orders-toolbar { grid-template-columns: 1fr; }
+  .admin-orders-heading, .admin-order-detail-heading { align-items: flex-start; flex-direction: column; }
+  .admin-order-card dl div { grid-template-columns: 1fr; gap: .2rem; }
+}

@@ -1,0 +1,16 @@
+HTTP/1.1 200 OK
+Date: Sun, 11 Oct 2026 08:33:45 GMT
+Content-Type: application/json
+Transfer-Encoding: chunked
+Connection: keep-alive
+access-control-allow-origin: https://frontend-jade-zeta-89.vercel.app
+Cache-Control: no-cache, private
+rndr-id: 46fe3d83-77dd-468d
+Server: cloudflare
+vary: Accept-Encoding
+x-powered-by: PHP/8.3.35
+x-render-origin-server: Apache/2.4.68 (Debian)
+cf-cache-status: DYNAMIC
+CF-RAY: a48c85918ff41ec0-HKG
+alt-svc: h3=":443"; ma=86400
+

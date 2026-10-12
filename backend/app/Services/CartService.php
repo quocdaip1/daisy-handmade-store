@@ -7,25 +7,27 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class CartService
 {
+    public function __construct(private readonly ProductInventoryService $inventory) {}
+
     public function items(User $user): Collection
     {
-        return $user->cartItems()->with('product.category')->orderBy('id')->get();
+        return $user->cartItems()->with(['product.category', 'product.variants'])->orderBy('id')->get();
     }
 
-    public function add(User $user, int $productId, int $quantity): Collection
+    public function add(User $user, int $productId, int $quantity, ?int $variantId = null): Collection
     {
-        DB::transaction(function () use ($user, $productId, $quantity): void {
+        DB::transaction(function () use ($user, $productId, $quantity, $variantId): void {
             $product = Product::query()->lockForUpdate()->findOrFail($productId);
             $item = CartItem::query()->lockForUpdate()->firstOrNew([
                 'user_id' => $user->id,
                 'product_id' => $product->id,
+                'variant_id' => $variantId,
             ]);
             $newQuantity = ($item->exists ? $item->quantity : 0) + $quantity;
-            $this->ensureAvailable($product, $newQuantity);
+            $this->ensureAvailable($product, $newQuantity, $variantId, $user, $item);
             $item->quantity = $newQuantity;
             $item->save();
         });
@@ -36,9 +38,9 @@ class CartService
     public function update(User $user, CartItem $item, int $quantity): Collection
     {
         $this->ensureOwned($user, $item);
-        DB::transaction(function () use ($item, $quantity): void {
+        DB::transaction(function () use ($item, $quantity, $user): void {
             $product = Product::query()->lockForUpdate()->findOrFail($item->product_id);
-            $this->ensureAvailable($product, $quantity);
+            $this->ensureAvailable($product, $quantity, $item->variant_id, $user, $item);
             $item->update(['quantity' => $quantity]);
         });
 
@@ -58,13 +60,13 @@ class CartService
         $user->cartItems()->delete();
     }
 
-    private function ensureAvailable(Product $product, int $quantity): void
+    private function ensureAvailable(Product $product, int $quantity, ?int $variantId, User $user, CartItem $item): void
     {
-        if ($product->status !== 'published' || $product->stock < $quantity) {
-            throw ValidationException::withMessages([
-                'quantity' => ["Sản phẩm {$product->name} không đủ tồn kho."],
-            ]);
+        $selection = $this->inventory->selection($product, $variantId, true);
+        if ($selection['source'] === 'shared') {
+            $quantity += (int) $user->cartItems()->where('product_id', $product->id)->when($item->exists, fn ($q) => $q->where('id', '!=', $item->id))->sum('quantity');
         }
+        $this->inventory->ensureAvailable($product, $selection, $quantity, 'quantity');
     }
 
     private function ensureOwned(User $user, CartItem $item): void

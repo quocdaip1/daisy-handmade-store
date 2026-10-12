@@ -26,7 +26,7 @@ class ProductController extends Controller
     {
         return new ProductResource(Product::query()
             ->published()
-            ->with('category')
+            ->with(['category', 'variants'])
             ->where('slug', $slug)
             ->firstOrFail());
     }
@@ -36,7 +36,7 @@ class ProductController extends Controller
         $product = Product::query()->published()->where('slug', $slug)->firstOrFail();
         $products = Product::query()
             ->published()
-            ->with('category')
+            ->with(['category', 'variants'])
             ->where('category_id', $product->category_id)
             ->whereKeyNot($product->getKey())
             ->orderByDesc('featured')
@@ -51,7 +51,7 @@ class ProductController extends Controller
     {
         return ProductResource::collection(Product::query()
             ->published()
-            ->with('category')
+            ->with(['category', 'variants'])
             ->where('is_new', true)
             ->latest()
             ->paginate($request->integer('per_page', 12))
@@ -62,7 +62,7 @@ class ProductController extends Controller
     {
         return ProductResource::collection(Product::query()
             ->published()
-            ->with('category')
+            ->with(['category', 'variants'])
             ->where('featured', true)
             ->orderByDesc('rating')
             ->latest()
@@ -74,7 +74,7 @@ class ProductController extends Controller
     {
         return Product::query()
             ->published()
-            ->with('category')
+            ->with(['category', 'variants'])
             ->search($request->validated('search'))
             ->inCategory($request->integer('category') ?: null)
             ->inPriceRange(

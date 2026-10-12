@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { CartItem } from '../types/cart'
 import type { Product } from '../types/product'
+import { cartItemStock, selectedStock, productSelectionKey } from '../utils/productSelection'
 import { CartContext } from './CartContext'
 
 const CART_STORAGE_KEY = 'viet-ngoc-cart'
@@ -39,42 +40,36 @@ export function CartProvider({ children }: CartProviderProps) {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems))
   }, [cartItems])
 
-  const addToCart = (product: Product, quantity = 1) => {
-    if (product.stock <= 0 || quantity <= 0 || !Number.isFinite(quantity)) {
-      return
-    }
-
-    const safeQuantity = Math.min(Math.floor(quantity), product.stock)
+  const addToCart = (product: Product, quantity = 1, variantId?: number) => {
+    const variant = product.variants?.find((item) => item.id === variantId)
+    const stock = selectedStock(product, variant)
+    if ((variantId !== undefined && !variant?.active) || stock <= 0 || quantity <= 0 || !Number.isFinite(quantity)) return
+    const safeQuantity = Math.min(Math.floor(quantity), stock)
+    const key = productSelectionKey(product.id, variantId)
     setCartItems((currentItems) => {
-      const existingItem = currentItems.find((item) => item.product.id === product.id)
-
-      if (existingItem) {
-        return currentItems.map((item) =>
-          item.product.id === product.id
-            ? { ...item, product, quantity: Math.min(item.quantity + safeQuantity, product.stock) }
-            : item,
-        )
-      }
-
-      return [...currentItems, { product, quantity: safeQuantity }]
+      const existing = currentItems.find((item) => productSelectionKey(item.product.id, item.variantId) === key)
+      const otherQuantity = product.inventoryMode === 'variant' ? 0 : currentItems.filter((item) => item.product.id === product.id && productSelectionKey(item.product.id, item.variantId) !== key).reduce((sum, item) => sum + item.quantity, 0)
+      const nextQuantity = Math.min((existing?.quantity ?? 0) + safeQuantity, Math.max(0, stock - otherQuantity))
+      if (!nextQuantity) return currentItems
+      const next = { product, quantity: nextQuantity, variantId, colorName: variant?.colorName }
+      return existing ? currentItems.map((item) => productSelectionKey(item.product.id, item.variantId) === key ? next : item) : [...currentItems, next]
     })
   }
 
-  const removeFromCart = (productId: number) => {
-    setCartItems((currentItems) => currentItems.filter((item) => item.product.id !== productId))
+  const removeFromCart = (productId: number, variantId?: number) => {
+    const key = productSelectionKey(productId, variantId)
+    setCartItems((items) => items.filter((item) => productSelectionKey(item.product.id, item.variantId) !== key))
   }
 
-  const updateQuantity = (productId: number, quantity: number) => {
-    setCartItems((currentItems) =>
-      currentItems.flatMap((item) => {
-        if (item.product.id !== productId) {
-          return [item]
-        }
-
-        const nextQuantity = Math.max(0, Math.min(quantity, item.product.stock))
-        return nextQuantity > 0 ? [{ ...item, quantity: nextQuantity }] : []
-      }),
-    )
+  const updateQuantity = (productId: number, quantity: number, variantId?: number) => {
+    if (!Number.isFinite(quantity)) return
+    const key = productSelectionKey(productId, variantId)
+    setCartItems((items) => items.flatMap((item) => {
+      if (productSelectionKey(item.product.id, item.variantId) !== key) return [item]
+      const others = item.product.inventoryMode === 'variant' ? 0 : items.filter((other) => other.product.id === productId && productSelectionKey(other.product.id, other.variantId) !== key).reduce((sum, other) => sum + other.quantity, 0)
+      const nextQuantity = Math.max(0, Math.min(Math.floor(quantity), cartItemStock(item) - others))
+      return nextQuantity > 0 ? [{ ...item, quantity: nextQuantity }] : []
+    }))
   }
 
   const clearCart = () => {

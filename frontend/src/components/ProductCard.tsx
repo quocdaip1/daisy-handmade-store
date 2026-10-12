@@ -1,13 +1,15 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { Product } from '../types/product'
 import { formatCurrency } from '../utils/formatCurrency'
 
 interface ProductCardProps { product: Product; onAddToCart: (product: Product) => void }
 
 export function ProductCard({ product, onAddToCart }: ProductCardProps) {
+  const navigate = useNavigate()
+  const needsColor = product.inventoryMode === 'variant'
   const hasDiscount = Boolean(product.originalPrice && product.originalPrice > product.price)
   const discount = hasDiscount && product.originalPrice ? Math.round((1 - product.price / product.originalPrice) * 100) : 0
-  const image = product.images[0]
+  const image = product.coverImage ?? product.images[0]
   return (
     <article className="product-card">
       <Link to={`/san-pham/${product.slug}`} className="product-image-wrap" aria-label={`Xem ${product.name}`}>
@@ -27,9 +29,9 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
           <strong>{formatCurrency(product.price)}</strong>
           {product.originalPrice ? <span className="old-price">{formatCurrency(product.originalPrice)}</span> : null}
         </div>
-        <button type="button" className="button button-primary product-add-button" onClick={() => onAddToCart(product)} disabled={product.stock === 0}>
+        <button type="button" className="button button-primary product-add-button" onClick={() => needsColor ? navigate(`/san-pham/${product.slug}`) : onAddToCart(product)} disabled={product.stock === 0}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h2l2.3 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L21 7H6M12 9v4M10 11h4" /></svg>
-          {product.stock > 0 ? 'Thêm vào giỏ' : 'Tạm hết hàng'}
+          {product.stock <= 0 ? 'Tạm hết hàng' : needsColor ? 'Chọn màu' : 'Thêm vào giỏ'}
         </button>
       </div>
     </article>

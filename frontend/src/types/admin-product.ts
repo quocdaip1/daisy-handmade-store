@@ -1,4 +1,4 @@
-import type { Product } from './product'
+import type { Product, InventoryMode, ProductVariantDraft } from './product'
 
 export type ProductStatus = 'draft' | 'published' | 'inactive'
 
@@ -21,6 +21,10 @@ export interface AdminProductFormValues {
   material: string
   color: string
   stock: number
+  inventoryMode: InventoryMode
+  variants: ProductVariantDraft[]
+  confirmStockAdjustment: boolean
+  coverImage?: string
   images: string[]
   featured: boolean
   isNew: boolean

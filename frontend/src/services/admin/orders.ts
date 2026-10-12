@@ -4,6 +4,8 @@ import type { AdminOrder, AdminOrderCatalog, OrderStatus } from '../../types/adm
 interface ApiOrderItem {
   id: number
   product_id?: number | null
+  color_name?: string | null
+  variant_id?: number | null
   product_name: string
   product_sku?: string | null
   quantity: number
@@ -63,6 +65,8 @@ function mapOrder(order: ApiOrder): AdminOrder {
       id: item.id,
       productId: item.product_id ?? undefined,
       productName: item.product_name,
+      colorName: item.color_name ?? undefined,
+      variantId: item.variant_id ?? undefined,
       productSku: item.product_sku ?? undefined,
       quantity: item.quantity,
       price: Number(item.price),

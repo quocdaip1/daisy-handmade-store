@@ -21,7 +21,7 @@ export function ProductTable({ products, isLoading, onEdit, onDeactivate }: Prod
         <tbody>
           {products.map((product) => (
             <tr key={product.id}>
-              <td><div className="admin-product-identity">{product.images[0] ? <img src={product.images[0]} alt="" /> : <span aria-hidden="true">✿</span>}<div><strong>{product.name}</strong><small>{product.slug}</small></div></div></td>
+              <td><div className="admin-product-identity">{(product.coverImage ?? product.images[0]) ? <img src={(product.coverImage ?? product.images[0])} alt="" /> : <span aria-hidden="true">✿</span>}<div><strong>{product.name}</strong><small>{product.slug}</small></div></div></td>
               <td>{product.sku || '—'}</td>
               <td>{formatCurrency(product.price)}</td>
               <td>{product.stock}</td>

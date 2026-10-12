@@ -2,6 +2,7 @@ import { useContext, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CartContext } from '../context/CartContext'
 import { CheckoutRequestError, createOrder, previewCheckout, validateCoupon, type CheckoutPreview, type CreateOrderResponse } from '../services/orders'
+import { productSelectionKey, cartItemImage } from '../utils/productSelection'
 import { formatCurrency } from '../utils/formatCurrency'
 
 interface FormErrors { fullName?: string; phone?: string; email?: string; city?: string; district?: string; address?: string; coupon?: string }
@@ -21,7 +22,7 @@ export function CheckoutPage() {
   const [orderResult, setOrderResult] = useState<CreateOrderResponse | null>(null)
   const [qrImageFailed, setQrImageFailed] = useState(false)
 
-  const cartSignature = cartItems.map((item) => `${item.product.id}:${item.quantity}`).sort().join('|')
+  const cartSignature = cartItems.map((item) => `${productSelectionKey(item.product.id, item.variantId)}:${item.quantity}`).sort().join('|')
   const activePreview = previewCartSignature === cartSignature ? preview : null
 
   const invalidatePreview = () => {
@@ -111,7 +112,7 @@ export function CheckoutPage() {
     setErrors((current) => ({ ...current, coupon: undefined }))
     try {
       const result = await previewCheckout({
-        items: cartItems.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
+        items: cartItems.map((item) => ({ product_id: item.product.id, variant_id: item.variantId, quantity: item.quantity })),
         address: checkoutAddress(),
         customer_email: formData.email.trim(),
         payment_method: 'bank_transfer',
@@ -137,7 +138,7 @@ export function CheckoutPage() {
     try {
       const result = await createOrder({
         preview_id: activePreview.preview_id,
-        items: cartItems.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
+        items: cartItems.map((item) => ({ product_id: item.product.id, variant_id: item.variantId, quantity: item.quantity })),
         customer_name: formData.fullName.trim(),
         customer_email: formData.email.trim(),
         customer_phone: formData.phone.trim(),
@@ -191,7 +192,7 @@ export function CheckoutPage() {
           {error ? <p className="checkout-error" role="alert">{error}</p> : null}
         </div>
 
-        <aside className="checkout-summary"><h2>Tóm tắt đơn hàng</h2><div className="checkout-products">{(activePreview?.items ?? cartItems.map((item) => ({ product_id: item.product.id, name: item.product.name, quantity: item.quantity, unit_price: item.product.price, line_total: item.product.price * item.quantity }))).map((item) => { const cartItem = cartItems.find((candidate) => candidate.product.id === item.product_id); return <div key={item.product_id}><span>{cartItem?.product.images[0] ? <img src={cartItem.product.images[0]} alt="" /> : '✿'}<b>{item.quantity}</b></span><p><strong>{item.name}</strong><small>{cartItem?.product.material}</small></p><em>{formatCurrency(item.line_total)}</em></div> })}</div><div className="summary-lines"><div><span>Tạm tính ({totalItems} món)</span><strong>{formatCurrency(displayedSubtotal)}</strong></div><div><span>Giảm giá</span><strong>{displayedDiscount > 0 ? `-${formatCurrency(displayedDiscount)}` : couponCode.trim() && !activePreview ? 'Đang chờ xác nhận' : 'Chưa áp dụng'}</strong></div><div><span>Phí giao hàng</span><strong>{formatCurrency(activePreview?.shipping_fee ?? 0)}</strong></div></div><div className="checkout-grand-total"><span>Tổng thanh toán</span><strong>{formatCurrency(displayedTotal)}</strong></div>{activePreview ? <button type="button" className="button button-primary checkout-submit" disabled={isCreatingOrder} onClick={() => void handleCreateOrder()}>{isCreatingOrder ? 'Đang đặt hàng...' : 'Đặt hàng'} <span aria-hidden="true">→</span></button> : <button type="submit" className={`button button-primary checkout-submit ${isPreviewing ? 'is-loading' : ''}`} disabled={isPreviewing}>{isPreviewing ? <><i className="checkout-spinner" aria-hidden="true" />Đang tính tổng...</> : 'Xem tổng thanh toán'} <span aria-hidden="true">→</span></button>}<p className="checkout-terms">Giỏ hàng sẽ được cập nhật sau khi đơn hàng được đặt thành công.</p><div className="summary-assurance"><span>✓ Giá và số lượng sản phẩm được xác nhận trước khi đặt hàng</span><span>✓ Thông tin đơn hàng của bạn được xử lý an toàn</span></div></aside>
+        <aside className="checkout-summary"><h2>Tóm tắt đơn hàng</h2><div className="checkout-products">{(activePreview?.items ?? cartItems.map((item) => ({ product_id: item.product.id, variant_id: item.variantId, color_name: item.colorName, name: item.product.name, quantity: item.quantity, unit_price: item.product.price, line_total: item.product.price * item.quantity }))).map((item) => { const cartItem = cartItems.find((candidate) => productSelectionKey(candidate.product.id, candidate.variantId) === productSelectionKey(item.product_id, item.variant_id)); return <div key={productSelectionKey(item.product_id, item.variant_id)}><span>{cartItem && cartItemImage(cartItem) ? <img src={cartItemImage(cartItem)} alt="" /> : '✿'}<b>{item.quantity}</b></span><p><strong>{item.name}</strong>{item.color_name && <small>Màu: {item.color_name}</small>}<small>{cartItem?.product.material}</small></p><em>{formatCurrency(item.line_total)}</em></div> })}</div><div className="summary-lines"><div><span>Tạm tính ({totalItems} món)</span><strong>{formatCurrency(displayedSubtotal)}</strong></div><div><span>Giảm giá</span><strong>{displayedDiscount > 0 ? `-${formatCurrency(displayedDiscount)}` : couponCode.trim() && !activePreview ? 'Đang chờ xác nhận' : 'Chưa áp dụng'}</strong></div><div><span>Phí giao hàng</span><strong>{formatCurrency(activePreview?.shipping_fee ?? 0)}</strong></div></div><div className="checkout-grand-total"><span>Tổng thanh toán</span><strong>{formatCurrency(displayedTotal)}</strong></div>{activePreview ? <button type="button" className="button button-primary checkout-submit" disabled={isCreatingOrder} onClick={() => void handleCreateOrder()}>{isCreatingOrder ? 'Đang đặt hàng...' : 'Đặt hàng'} <span aria-hidden="true">→</span></button> : <button type="submit" className={`button button-primary checkout-submit ${isPreviewing ? 'is-loading' : ''}`} disabled={isPreviewing}>{isPreviewing ? <><i className="checkout-spinner" aria-hidden="true" />Đang tính tổng...</> : 'Xem tổng thanh toán'} <span aria-hidden="true">→</span></button>}<p className="checkout-terms">Giỏ hàng sẽ được cập nhật sau khi đơn hàng được đặt thành công.</p><div className="summary-assurance"><span>✓ Giá và số lượng sản phẩm được xác nhận trước khi đặt hàng</span><span>✓ Thông tin đơn hàng của bạn được xử lý an toàn</span></div></aside>
       </form>
     </section>
   )

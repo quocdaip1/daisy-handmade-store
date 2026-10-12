@@ -6,6 +6,14 @@ Tài liệu này là nguồn tham chiếu nhanh trước khi thực hiện các 
 
 ## 1. Tổng quan dự án
 
+Product colors/inventory implementation (2026-10-12): working-tree-only additive migration and variants/gallery/inventory services, admin editors, customer color selection and variant-aware cart/checkout/cancellation. Existing products/orders keep shared inventory; migration tested only on isolated SQLite and local DB copy, not production. See `docs/product-variants.md` for rules, tests and rollout limits. No production deployment authorized or performed.
+
+Image upload shared-link fix (2026-10-11): public disk defaults to `/storage` via `PUBLIC_STORAGE_URL`; Vite proxies `/api` and `/storage` via server-side `API_PROXY_TARGET`; product image URLs resolve against frontend API configuration and legacy loopback URLs are normalized in API responses. `storage:link` is still required. Lint/build and 72 backend tests passed; external browser verification remains unavailable. See `docs/image-storage.md` for sharing modes and verification limits.
+
+Confirmed hosting follow-up: shared frontend is `https://frontend-jade-zeta-89.vercel.app`, deployed API base is `https://daisy-api-quocdai.onrender.com/api`. Public API returns ten correctly formed HTTPS upload URLs, all HTTP 404; upload CORS preflight works. Docker startup now creates the storage link and Docker context excludes local storage junction/uploads. Render authentication expired, so live file existence, persistent disk, deployment and new remote upload remain unverified. See `docs/image-storage.md` for exact environment values and recovery steps.
+
+Final hosted repair: Render login renewed; Free Docker plan has no SSH/Shell or persistent disk. Image backend commit `6ba1ba6` deployed live (`dep-db5ksm8ae00c739phgl0`). Default `PRODUCT_IMAGE_STORAGE=database` stores encoded image bytes in PostgreSQL and serves immutable public HTTPS URLs through `/storage/products/{filename}`; the public disk implementation remains optional. 73 tests/570 assertions and lint passed. Real hosted upload (2.18 MB), fresh product API read, repeated image download and a confirmed new instance after Render restart returned 200 with matching SHA-256. Previous broken images still require original-file re-upload; no live browser/F5 verification available. See `docs/image-storage.md` for verification details.
+
 Daisy Handmade Store là website bán trang sức thủ công lấy cảm hứng từ cổ phục và văn hóa Việt Nam.
 
 - Frontend: React 19, TypeScript, Vite, React Router.
@@ -44,6 +52,7 @@ Daisy Handmade Store là website bán trang sức thủ công lấy cảm hứng
 | `/don-hang` | Lịch sử đơn hàng |
 | `/don-hang/:orderId` | Chi tiết đơn hàng |
 | `/chinh-sach/:policySlug` | Policy pages |
+| `/admin` | Admin Foundation, yêu cầu token và role `admin`/`staff` |
 | `/404` | Không tìm thấy trang |
 
 Các page được lazy-load tại `frontend/src/routes/AppRoutes.tsx`.
@@ -81,6 +90,8 @@ Base path backend: `/api`.
 | GET | `/api/categories/{slug}` |
 
 Product list hỗ trợ search, category, price, sort và pagination. Frontend phải sử dụng wrapper/pagination thực tế từ service hiện có, không giả định response chung cho mọi API.
+
+Customer Category API chỉ trả danh mục `active` và vẫn giữ nguyên các field `id`, `name`, `slug`, `description`; trạng thái quản trị không được đưa vào customer contract.
 
 ### Cart
 
@@ -138,11 +149,26 @@ Frontend chỉ gửi item identifier/quantity, customer/address, shipping method
 | GET | `/api/policies` |
 | GET | `/api/policies/{slug}` |
 
-Contact API có validation và throttle 5/phút. Policy pages hiện hiển thị nội dung tĩnh frontend; chưa có CMS.
+Contact API có validation và throttle 5/phút. Admin Phase 7 đọc danh sách/chi tiết lời nhắn, không tạo CRM workflow. Backend Policy/Banner records có Admin API cấu trúc cố định; customer `PolicyPage` hiện vẫn dùng nội dung tĩnh frontend và Homepage chưa consume Banner API.
 
 ### Admin
 
 Toàn bộ `/api/admin/*` dùng `auth:sanctum` và middleware `admin`. Customer phải nhận 403. Backend có quản lý Product, Category, Order, Customer, Coupon và Dashboard Statistics.
+
+Frontend Admin hiện có foundation tại `/admin`, Product Management tại `/admin/products`, Category Management tại `/admin/categories`, Order Management tại `/admin/orders`, Customer Management tại `/admin/customers`, Coupon Management tại `/admin/coupons` và Content Management tại `/admin/content/*`:
+
+- `AuthProvider` đọc token hiện có, lấy user qua `/api/me` và giữ nguyên auth contract.
+- Customer Header đồng bộ Auth Context sau login/register hoặc reload; chỉ hiển thị nút `Vào quản trị` sau khi `/api/admin/access` xác nhận role admin/staff ở backend.
+- `ProtectedAdminRoute` kiểm tra authentication và xác minh quyền bằng middleware admin hiện có; 401 chuyển `/dang-nhap`, 403 chuyển `/`.
+- `AdminLayout` gồm Sidebar, Header, logout và vùng `Outlet` responsive.
+- Product Management hỗ trợ list/search/status filter/pagination, create/edit, chuyển `inactive` và quản lý ảnh theo upload flow hiện có.
+- Category Management hỗ trợ list, create/edit, Active/Inactive và xóa danh mục rỗng; danh mục có sản phẩm không được xóa.
+- Order Management hỗ trợ list/search/status filter/pagination, detail, cập nhật status và tracking number; chỉ dùng `Order::STATUSES` hiện có.
+- Customer Management hỗ trợ list/search, profile read-only, addresses và customer order history; không có password editing hoặc CRM features.
+- Coupon Management hỗ trợ create/edit, enable/disable và usage statistics; chỉ dùng `percent`/`fixed` cùng limits/date rules của backend hiện có.
+- Content Management hỗ trợ hai Banner slots hiện có, đọc contact submissions và create/edit/publish Policy records bằng form cấu trúc cố định; không có Page Builder.
+- Dashboard tại `/admin` hiển thị Revenue, Orders, Customers, Products và tối đa 5 Best Sellers từ Statistics API; không query dữ liệu trực tiếp ở frontend và không có biểu đồ.
+- Settings tại `/admin/settings` quản lý Shop Information, Bank Account, Shipping Methods, Social Links và SEO Defaults qua `/api/admin/settings`; frontend không chứa giá trị cấu hình cửa hàng.
 
 ## 5. Validation và error handling
 
@@ -208,25 +234,29 @@ vendor\bin\pint --test
 Kết quả xác minh mới nhất ngày 15/07/2026:
 
 - Frontend lint: passed.
-- Frontend build: passed với Vite 8.1.4, 65 modules transformed.
-- Backend: 50/50 tests passed, 265 assertions.
+- Frontend build: passed với Vite 8.1.4, 73 modules transformed.
+- Backend: 60/60 tests passed, 408 assertions sau Admin Access UX.
+- Admin Final Audit: staging Go; production No-Go cho tới khi product upload có public storage link và persistent storage/object storage.
+- Backend auth scope sau Admin Phase 1: `AuthApiTest` passed 7/7 tests, 29 assertions.
 
 ## 8. Trạng thái database
 
 - User xác nhận đã chạy `php artisan migrate` sau backend audit cũ.
 - Database local đang cấu hình `DB_CONNECTION=sqlite` và có file `backend/database/database.sqlite`.
+- Migration Admin Phase 3 `2026_07_15_000001_add_active_to_categories_table.php` đã chạy thành công trên database local ngày 15/07/2026; môi trường khác vẫn phải chạy `php artisan migrate` khi triển khai.
+- Migration Admin Phase 9 `2026_07_15_000002_create_store_settings_table.php` đã chạy thành công trên database local ngày 15/07/2026; môi trường khác vẫn phải chạy `php artisan migrate`.
 - Không dựa vào migration status cũ trong `backend-final-audit.md`; phải chạy `artisan migrate:status` trước deployment để xác nhận trạng thái hiện tại.
 - Không chạy `migrate:fresh` và không xóa dữ liệu.
 
 ## 9. Giới hạn và rủi ro còn lại
 
 - Vite dev đã proxy `/api` sang Laravel port 8000; cần khởi động lại Vite sau khi đổi cấu hình.
-- Frontend chưa có Auth Context toàn cục; Header chưa phản ứng đầy đủ theo trạng thái token.
+- Auth Context đã đồng bộ với Customer Header, login/register và Profile logout; các Customer page còn lại vẫn có thể đọc token trực tiếp cho tới khi được chuẩn hóa ở phase riêng.
 - Cart frontend localStorage và backend cart cùng tồn tại; cần giữ chiến lược đồng bộ hiện tại, không rewrite tùy tiện.
 - Profile API hiện read-only.
 - Token Sanctum chưa có expiration policy.
 - Một số endpoint mutation chưa có rate limiter riêng.
-- Admin cập nhật trực tiếp order sang `cancelled`/`returned` có rủi ro bỏ qua side effects; xem `backend-final-audit.md` trước khi sửa workflow này.
+- Admin order update đã đi qua `OrderService`, nhưng backend chưa có transition matrix, status history hoặc return workflow đầy đủ; không tự suy diễn side effects khi mở rộng workflow.
 - Bank transfer xác minh thủ công; chưa có webhook/reconciliation/QR động.
 - Chưa có order status history, audit log, return workflow hoàn chỉnh hoặc notification queue.
 - Policy tĩnh chưa có version/published date/quy trình duyệt pháp lý.
@@ -261,3 +291,12 @@ Kết quả xác minh mới nhất ngày 15/07/2026:
 - Danh mục nổi bật dùng cùng chiều rộng section trang chủ: grid 3/2/1 cột theo desktop/tablet/mobile, ảnh `contain` đồng đều và nội dung/CTA thẳng hàng.
 - Sáu danh mục nổi bật dùng bộ ảnh JPG 768×768 riêng tại `frontend/public/categories`; không còn lấy ảnh sản phẩm seed hoặc hiển thị fallback hoa.
 - Hướng dẫn triển khai nằm tại `docs/deployment-guide.md`.
+- Admin Foundation có route `/admin` được bảo vệ theo role backend, Sidebar/Header responsive và logout.
+- Admin Phase 2 có route `/admin/products`, Product Form/Table, validation frontend/backend và image upload.
+- Admin Phase 3 có route `/admin/categories`; customer Category contract giữ nguyên và chỉ hiển thị danh mục active. Migration `2026_07_15_000001_add_active_to_categories_table.php` đã chạy local và cần được chạy ở các môi trường triển khai khác.
+- Admin Phase 4 có route `/admin/orders` và `/admin/orders/:orderId`; search/filter/detail/update dùng đúng 7 status trong `Order::STATUSES`, không tạo status mới.
+- Admin Phase 5 có route `/admin/customers` và `/admin/customers/:customerId`; profile chỉ đọc, hiển thị addresses/order history và backend cấm field `password` trong admin customer update.
+- Admin Phase 6 có route `/admin/coupons`; create/edit/toggle và usage statistics tái sử dụng Coupon APIs/engine hiện có, không thêm discount rule mới.
+- Admin Phase 7 có routes `/admin/content/banners`, `/admin/content/contacts`, `/admin/content/policies`; dùng models/schema hiện có và không tạo CMS/Page Builder tổng quát.
+- Admin Phase 8 dùng `/admin` làm Dashboard; doanh thu và Best Sellers chỉ tính đơn có `payment_status=paid`, giữ nguyên các statistics fields cũ và bổ sung `best_sellers`.
+- Admin Phase 9 có route `/admin/settings`; cấu hình Shop/Bank/Social/SEO lưu trong `store_settings`, cấu hình vận chuyển tái sử dụng `shipping_methods`, và Bank Settings được Payment Service dùng cho các đơn chuyển khoản mới.

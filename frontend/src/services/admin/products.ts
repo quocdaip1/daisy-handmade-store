@@ -1,5 +1,7 @@
-import { apiUrl } from '../../config/api'
+import { apiUrl, productImagePath, productImageUrl } from '../../config/api'
 import type { AdminProduct, AdminProductCatalog, AdminProductFormValues, ProductStatus } from '../../types/admin-product'
+
+import { mapProductVariant, type ApiProductVariant } from '../productVariants'
 
 interface ApiProduct {
   id: number
@@ -14,6 +16,9 @@ interface ApiProduct {
   material: string
   color: string
   stock: number
+  inventory_mode?: 'shared' | 'variant'
+  variants?: ApiProductVariant[]
+  cover_image?: string | null
   images?: string[]
   featured: boolean
   is_new: boolean
@@ -51,7 +56,10 @@ function mapProduct(product: ApiProduct): AdminProduct {
     material: product.material,
     color: product.color,
     stock: product.stock,
-    images: product.images ?? [],
+    inventoryMode: product.inventory_mode ?? 'shared',
+    variants: (product.variants ?? []).map(mapProductVariant),
+    coverImage: product.cover_image ? productImageUrl(product.cover_image) : undefined,
+    images: (product.images ?? []).map(productImageUrl),
     featured: product.featured,
     isNew: product.is_new,
     rating: Number(product.rating),
@@ -85,7 +93,11 @@ function productPayload(values: AdminProductFormValues) {
     material: values.material.trim(),
     color: values.color.trim(),
     stock: values.stock,
-    images: values.images,
+    inventory_mode: values.inventoryMode,
+    confirm_stock_adjustment: values.confirmStockAdjustment,
+    variants: values.variants.map((variant) => ({ id: variant.id, color_name: variant.colorName.trim(), stock: variant.stock, active: variant.active, images: variant.images.map(productImagePath) })),
+    cover_image: values.coverImage ? productImagePath(values.coverImage) : null,
+    images: values.images.map(productImagePath),
     featured: values.featured,
     is_new: values.isNew,
     status: values.status,

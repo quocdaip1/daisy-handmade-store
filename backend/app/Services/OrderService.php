@@ -14,6 +14,7 @@ class OrderService
         private readonly CouponService $coupons,
         private readonly PaymentService $payments,
         private readonly CheckoutPreviewService $checkoutPreviews,
+        private readonly ProductInventoryService $inventory,
     ) {}
 
     public function create(User $user, array $data): Order
@@ -46,9 +47,12 @@ class OrderService
 
             foreach ($data['items'] as $item) {
                 $product = $products->get($item['product_id']);
-                $product->decrement('stock', $item['quantity']);
+                $selection = $this->inventory->consume($product, $item['variant_id'] ?? null, $item['quantity']);
                 $order->items()->create([
                     'product_id' => $product->id,
+                    'variant_id' => $selection['variant']?->id,
+                    'color_name' => $selection['variant']?->color_name,
+                    'inventory_source' => $selection['source'],
                     'product_name' => $product->name,
                     'product_sku' => $product->sku,
                     'quantity' => $item['quantity'],
@@ -77,9 +81,9 @@ class OrderService
             }
 
             $productIds = $order->items->pluck('product_id')->filter();
-            $products = Product::query()->whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
+            $products = Product::query()->whereIn('id', $productIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
             foreach ($order->items as $item) {
-                $products->get($item->product_id)?->increment('stock', $item->quantity);
+                $this->inventory->restore($item, $products->get($item->product_id));
             }
 
             if ($order->coupon_id) {

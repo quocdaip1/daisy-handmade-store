@@ -1,3 +1,13 @@
+export type InventoryMode = 'shared' | 'variant'
+export interface ProductVariantDraft {
+  id?: number
+  colorName: string
+  stock: number | null
+  images: string[]
+  active: boolean
+}
+export interface ProductVariant extends ProductVariantDraft { id: number }
+
 export interface Product {
   id: number
   name: string
@@ -10,6 +20,9 @@ export interface Product {
   material: string
   color: string
   stock: number
+  inventoryMode?: InventoryMode
+  variants?: ProductVariant[]
+  coverImage?: string
   images: string[]
   featured: boolean
   isNew: boolean

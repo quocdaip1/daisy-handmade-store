@@ -1520,3 +1520,12 @@ textarea {
   .site-footer { grid-template-columns: 1fr; }
   .footer-brand, .footer-contact { grid-column: auto; }
 }
+
+.product-color-selector { margin: 0; padding: 0; border: 0; min-width: 0; }
+.product-color-selector legend { margin-bottom: .75rem; font-weight: 750; }
+.product-color-selector > div { display: flex; flex-wrap: wrap; gap: .5rem; }
+.product-color-selector button { min-height: 44px; max-width: 100%; padding: .6rem .9rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--white); color: var(--text); cursor: pointer; overflow-wrap: anywhere; }
+.product-color-selector button[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+.product-color-selector button:hover { background: var(--accent-soft); }
+.product-color-selector small { display: block; color: var(--text-muted); }
+.product-color-selector p { font-size: .85rem; }

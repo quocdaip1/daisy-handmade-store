@@ -16,7 +16,7 @@ export interface CustomerOrder {
   shipping_fee: number
   total: number
   tracking_number: string | null
-  items: Array<{ id: number; product_id: number | null; product_name: string; quantity: number; price: number; total: number }>
+  items: Array<{ id: number; product_id: number | null; product_name: string; variant_id?: number | null; color_name?: string | null; quantity: number; price: number; total: number }>
   payment?: OrderPayment
   created_at: string
 }

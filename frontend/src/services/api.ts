@@ -1,8 +1,10 @@
 import { categories as fallbackCategories } from '../data/categories'
 import { products as fallbackProducts } from '../data/products'
-import { apiUrl } from '../config/api'
+import { apiUrl, productImageUrl } from '../config/api'
 import type { Category } from '../types/category'
 import type { Product, ProductCatalog, ProductCatalogQuery } from '../types/product'
+
+import { mapProductVariant, type ApiProductVariant } from './productVariants'
 
 type ApiListResponse<T> = { data: T[] }
 type ApiItemResponse<T> = { data: T }
@@ -29,7 +31,7 @@ interface ApiProduct {
   id: number; name: string; slug: string; category_id?: number; categoryId?: number
   description: string; short_description?: string; shortDescription?: string; price: number
   original_price?: number; originalPrice?: number; material: string; color: string; stock: number
-  images?: string[]; featured?: boolean; is_new?: boolean; isNew?: boolean; rating: number
+  inventory_mode?: 'shared' | 'variant'; variants?: ApiProductVariant[]; cover_image?: string | null; images?: string[]; featured?: boolean; is_new?: boolean; isNew?: boolean; rating: number
 }
 
 class ApiRequestError extends Error {
@@ -63,7 +65,10 @@ function mapProduct(item: ApiProduct): Product {
     material: item.material,
     color: item.color,
     stock: item.stock,
-    images: item.images ?? [],
+    inventoryMode: item.inventory_mode ?? 'shared',
+    variants: (item.variants ?? []).map(mapProductVariant),
+    coverImage: item.cover_image ? productImageUrl(item.cover_image) : undefined,
+    images: (item.images ?? []).map(productImageUrl),
     featured: Boolean(item.featured),
     isNew: Boolean(item.is_new ?? item.isNew),
     rating: item.rating,

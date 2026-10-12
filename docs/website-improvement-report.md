@@ -1228,3 +1228,549 @@ npm.cmd run lint: passed
 npm.cmd run build: passed (Vite 8.1.4, 65 modules transformed)
 php artisan test: 50/50 tests passed, 265 assertions
 ```
+
+# Admin Phase 1 – Foundation
+
+## Phạm vi
+
+Chỉ xây dựng nền tảng frontend cho khu vực quản trị và đối chiếu authorization backend hiện có. Không tạo Dashboard, không CRUD dữ liệu, không sửa Customer UI và không thay đổi response/token contract của login, register hoặc `/api/me`.
+
+## Hạng mục hoàn thành
+
+- Thêm `AuthProvider` và hook dùng chung cho Admin Foundation; session tiếp tục đọc token `viet-ngoc-auth-token` và lấy user qua `/api/me`.
+- Thêm `ProtectedAdminRoute` cho `/admin`; không có token hoặc token hết hiệu lực chuyển `/dang-nhap`, role không được phép chuyển về `/`.
+- Role check dùng lớp bảo vệ backend hiện có: Sanctum + `EnsureAdmin`; `admin` và `staff` được phép, `customer` nhận 403.
+- Thêm Admin Layout responsive gồm Sidebar, Header, thông tin user, logout và vùng `Outlet` cho phase sau.
+- Sidebar chỉ đánh dấu các module tương lai là disabled; chưa tạo route hoặc màn hình Product, Order, Customer, Coupon.
+- `/admin` hiện chỉ render layout foundation và vùng nội dung rỗng; không render hoặc tải dữ liệu Dashboard để hiển thị.
+
+## File frontend đã tạo
+
+- `frontend/src/auth/auth-context.ts`
+- `frontend/src/auth/AuthProvider.tsx`
+- `frontend/src/auth/useAuth.ts`
+- `frontend/src/routes/ProtectedAdminRoute.tsx`
+- `frontend/src/layouts/admin/AdminLayout.tsx`
+- `frontend/src/layouts/admin/AdminHeader.tsx`
+- `frontend/src/layouts/admin/AdminSidebar.tsx`
+- `frontend/src/layouts/admin/admin-layout.css`
+
+## File frontend đã sửa
+
+- `frontend/src/routes/AppRoutes.tsx`
+- `frontend/src/services/auth.ts`
+
+## Backend
+
+- Đã đối chiếu `User::isAdmin()` và `EnsureAdmin`; logic role hiện tại đáp ứng foundation nên không sửa backend.
+- Không đổi auth response, middleware contract, database hoặc permission architecture.
+
+## Kiểm tra
+
+```text
+npm.cmd run lint: passed
+npm.cmd run build: passed (Vite 8.1.4, 73 modules transformed)
+AuthApiTest: 7/7 tests passed, 29 assertions
+```
+
+## Giới hạn sau Phase 1
+
+- Chưa có Dashboard frontend hoặc dữ liệu thống kê quản trị.
+- Chưa có Admin CRUD và chưa mở route cho các module trong Sidebar.
+- Auth Context mới phục vụ Admin Foundation; Customer Header/page giữ nguyên để không vượt phạm vi.
+
+Admin Phase 1 dừng tại Foundation.
+
+# Admin Phase 2 – Product Management
+
+## Phạm vi
+
+Hoàn thiện Product Management frontend trên Admin Foundation và tái sử dụng toàn bộ Product Admin API hiện có. Không đổi customer Product API contract, không sửa database và không mở sang module Admin khác.
+
+## Contract sử dụng
+
+- `GET /api/admin/products`: danh sách có search, status filter và pagination.
+- `POST /api/admin/products`: tạo sản phẩm.
+- `PUT /api/admin/products/{product}`: cập nhật đầy đủ dữ liệu, status và danh sách URL ảnh hiện có.
+- `DELETE /api/admin/products/{product}`: chuyển sản phẩm sang `inactive`, không hard delete.
+- `POST /api/admin/products/{product}/images`: upload multipart theo flow hiện có, tối đa 8 ảnh JPG/JPEG/PNG/WebP mỗi request và 5 MB mỗi ảnh.
+- Tất cả endpoint tiếp tục dùng Sanctum + admin middleware và validation backend hiện có.
+
+## Hạng mục hoàn thành
+
+- Thêm route protected `/admin/products` và liên kết thật trong Admin Sidebar.
+- Product List dạng table responsive, có ảnh đại diện, SKU, giá, tồn kho, status và thao tác.
+- Search theo tên, filter `draft`/`published`/`inactive`, pagination 15 sản phẩm mỗi trang và retry state.
+- Product Form dùng chung cho create/edit; hỗ trợ category, SKU, giá, giá gốc, tồn kho, mô tả, chất liệu, màu sắc, rating, featured, is-new và status.
+- Validation frontend bám giới hạn `AdminProductRequest`; lỗi Laravel 422 được map về đúng field.
+- Tái sử dụng `Product` type hiện có làm base cho `AdminProduct`, chỉ bổ sung `sku`, `status` và timestamps của admin resource.
+- Image Management hiển thị ảnh hiện có, cho gỡ URL khỏi product, chọn nhiều file mới và upload sau khi create/update thành công.
+- Nếu upload lỗi sau khi create/update đã thành công, form chuyển sang edit bản ghi vừa lưu để lần thử lại không tạo sản phẩm trùng.
+- Delete action bám đúng backend behavior: xác nhận trước khi chuyển status sang `inactive`.
+
+## File frontend đã tạo
+
+- `frontend/src/pages/admin/ProductManagementPage.tsx`
+- `frontend/src/pages/admin/product-management.css`
+- `frontend/src/components/admin/ProductForm.tsx`
+- `frontend/src/components/admin/ProductTable.tsx`
+- `frontend/src/services/admin/products.ts`
+- `frontend/src/types/admin-product.ts`
+
+## File frontend đã sửa
+
+- `frontend/src/routes/AppRoutes.tsx`
+- `frontend/src/layouts/admin/AdminSidebar.tsx`
+
+## Backend
+
+- Đã đối chiếu Product API, `AdminProductRequest`, `AdminProductResource` và upload flow hiện tại.
+- Backend hiện có đã đáp ứng Phase 2 nên không sửa controller, validation, resource, route hoặc customer API.
+
+## Kiểm tra
+
+```text
+Product CRUD test: 1/1 passed, 15 assertions
+npm.cmd run lint: passed
+npm.cmd run build: passed (Vite 8.1.4, 78 modules transformed)
+```
+
+## Giới hạn sau Phase 2
+
+- Backend delete chỉ chuyển sản phẩm sang `inactive`; không xóa record để bảo toàn tham chiếu lịch sử.
+- Gỡ URL ảnh khỏi product không xóa file vật lý trong storage vì backend hiện chưa có endpoint media delete.
+- Create/update và upload là hai request liên tiếp theo flow hiện tại; nếu upload lỗi sau khi lưu, dữ liệu sản phẩm đã được lưu và admin có thể mở form để upload lại.
+- Chưa có reorder ảnh, bulk action hoặc import/export.
+
+Admin Phase 2 dừng tại Product Management.
+
+# Admin Phase 3 – Category Management
+
+## Phạm vi
+
+Chỉ hoàn thiện Category Management trên Admin Foundation và cập nhật Category API tối thiểu để hỗ trợ trạng thái Active/Inactive. Không sửa Product Listing frontend, không đổi field của customer Category Resource và không mở module Admin khác.
+
+## Contract
+
+- Customer `GET /api/categories` và `GET /api/categories/{slug}` giữ nguyên response fields `id`, `name`, `slug`, `description` và chỉ trả category active.
+- Admin `GET /api/admin/categories` trả thêm `active`, `products_count` và timestamps qua `AdminCategoryResource` riêng.
+- Admin `POST/PUT /api/admin/categories` nhận `name`, `slug`, `description`, `active` với validation backend.
+- Admin `DELETE /api/admin/categories/{category}` tiếp tục hard-delete category rỗng và trả 422 nếu category đang có sản phẩm.
+
+## Hạng mục hoàn thành
+
+- Thêm route protected `/admin/categories` và liên kết trong Admin Sidebar.
+- Category List responsive hiển thị tên, slug, mô tả, số sản phẩm và trạng thái.
+- Form dùng chung cho create/edit, có validation frontend và map lỗi Laravel 422 theo field.
+- Cho phép chuyển Active/Inactive từ table hoặc form.
+- Delete có xác nhận; UI vô hiệu hóa thao tác khi category đang có sản phẩm và backend tiếp tục bảo vệ bằng validation.
+- Thêm cột database `categories.active` mặc định `true`, giữ dữ liệu/category hiện có hoạt động sau migration.
+- Public Category API lọc category inactive nhưng không thêm field admin vào customer response.
+
+## File frontend
+
+- Tạo `frontend/src/pages/admin/CategoryManagementPage.tsx`.
+- Tạo `frontend/src/pages/admin/category-management.css`.
+- Tạo `frontend/src/services/admin/categories.ts`.
+- Tạo `frontend/src/types/admin-category.ts`.
+- Sửa `frontend/src/routes/AppRoutes.tsx` và `frontend/src/layouts/admin/AdminSidebar.tsx`.
+
+## File backend
+
+- Tạo `backend/database/migrations/2026_07_15_000001_add_active_to_categories_table.php`.
+- Tạo `backend/app/Http/Resources/AdminCategoryResource.php`.
+- Sửa Category model, admin request, admin/public controllers và tests liên quan.
+- Không sửa `CategoryResource`, Product API hoặc Product Listing frontend.
+
+## Kiểm tra
+
+```text
+AdminSystemApiTest + ProductApiTest: 10/10 tests passed, 104 assertions
+npm.cmd run lint: passed
+npm.cmd run build: passed (Vite 8.1.4, 81 modules transformed)
+php artisan migrate: migration categories.active completed on local SQLite
+pint --test: passed
+```
+
+## Giới hạn sau Phase 3
+
+- Migration đã chạy trên SQLite local; các môi trường khác cần chạy `php artisan migrate` để thêm `categories.active`, không dùng `migrate:fresh`.
+- Inactive category bị ẩn khỏi customer Category API nhưng sản phẩm của category vẫn được giữ nguyên, không xóa hoặc tự đổi status.
+- Chưa có reorder, bulk action hoặc ảnh đại diện category trong Admin.
+
+Admin Phase 3 dừng tại Category Management.
+
+# Admin Phase 4 – Order Management
+
+## Phạm vi
+
+Chỉ hoàn thiện Order List, Order Detail và cập nhật tối thiểu Admin Order API/Order Service. Không sửa customer order pages hoặc contract, không tạo status mới và không mở Customer/Coupon/Dashboard Admin.
+
+## Status và contract
+
+- Frontend dùng đúng `Order::STATUSES`: `pending`, `confirmed`, `preparing`, `shipping`, `completed`, `cancelled`, `returned`.
+- `GET /api/admin/orders` giữ pagination hiện có, bổ sung query `search` tối đa 100 ký tự và tiếp tục hỗ trợ `status`.
+- Search khớp order number, customer name, email, phone và tracking number.
+- `GET /api/admin/orders/{order}` trả detail qua `OrderResource` hiện có.
+- `PATCH /api/admin/orders/{order}` tiếp tục nhận status/tracking theo `AdminOrderUpdateRequest`; transaction cập nhật được chuyển vào `OrderService::updateByAdmin()`.
+- Không sửa customer `GET/POST /api/orders`, cancel endpoint hoặc customer Order Resource contract.
+
+## Hạng mục hoàn thành
+
+- Thêm protected routes `/admin/orders` và `/admin/orders/:orderId`, đồng thời mở liên kết Đơn hàng trong Admin Sidebar.
+- Order List có table responsive, search, status filter, pagination, tổng tiền, customer, tracking và link detail.
+- Order Detail hiển thị items, totals, thông tin giao nhận, payment state và ngày tạo.
+- Form cập nhật dùng dropdown đúng 7 backend statuses và tracking number tối đa 100 ký tự.
+- Validation frontend xử lý tracking length; lỗi backend 422 được map theo field.
+- Backend search validation và Order Service update có tests cho search/filter/detail/status/tracking/invalid status.
+
+## File frontend
+
+- Tạo `frontend/src/pages/admin/OrderListPage.tsx`.
+- Tạo `frontend/src/pages/admin/OrderDetailPage.tsx`.
+- Tạo `frontend/src/pages/admin/order-management.css`.
+- Tạo `frontend/src/services/admin/orders.ts`.
+- Tạo `frontend/src/types/admin-order.ts`.
+- Sửa `frontend/src/routes/AppRoutes.tsx` và `frontend/src/layouts/admin/AdminSidebar.tsx`.
+
+## File backend
+
+- Sửa `backend/app/Http/Controllers/Api/AdminController.php` để validate/search order và gọi Order Service khi update.
+- Sửa `backend/app/Services/OrderService.php` để quản lý transaction admin update.
+- Mở rộng `backend/tests/Feature/AdminSystemApiTest.php` cho Order Management.
+- Không đổi schema, `Order::STATUSES`, customer routes hoặc Order Resource.
+
+## Kiểm tra
+
+```text
+OrderApiTest + AdminSystemApiTest: 11/11 tests passed, 108 assertions
+npm.cmd run lint: passed
+npm.cmd run build: passed (Vite 8.1.4, 86 modules transformed)
+pint --test: passed
+```
+
+## Giới hạn sau Phase 4
+
+- Backend hiện kiểm tra status thuộc `Order::STATUSES` nhưng chưa áp transition matrix giữa các trạng thái.
+- Chưa có status history, audit log, notification hoặc return/refund workflow hoàn chỉnh; Phase 4 không tự thêm side effects chưa có contract.
+- Payment status được hiển thị read-only trên UI Phase 4; tracking number và order status là hai field được quản trị.
+
+Admin Phase 4 dừng tại Order Management.
+
+# Admin Phase 5 – Customer Management
+
+## Phạm vi
+
+Chỉ hoàn thiện Customer List và Customer Detail trên Admin Foundation, đồng thời kiểm chứng User APIs/authorization hiện có. Không tạo CRM, không thêm notes/tags/segments, không sửa customer auth contract và không cho chỉnh sửa password trực tiếp.
+
+## Contract và authorization
+
+- `GET /api/admin/customers` chỉ trả user role `customer`, hỗ trợ search theo name/email và pagination tối đa 50 records mỗi trang.
+- `GET /api/admin/customers/{customer}` chỉ trả profile role `customer`, addresses, `orders_count` và order history mới nhất trước.
+- Toàn bộ endpoints tiếp tục nằm sau Sanctum + admin middleware: unauthenticated nhận 401, customer nhận 403, id của admin/staff tại customer detail nhận 404.
+- `PUT /api/admin/customers/{customer}` hiện có vẫn chỉ cho name/email; `password` được đánh dấu `prohibited` và không có UI update trong Phase 5.
+- Password/remember token tiếp tục bị ẩn bởi User model; authorization test xác nhận response không có password và password hash không đổi.
+
+## Hạng mục hoàn thành
+
+- Thêm protected routes `/admin/customers` và `/admin/customers/:customerId`, đồng thời mở liên kết Khách hàng trong Admin Sidebar.
+- Customer List có search name/email, pagination, số đơn hàng, ngày tham gia và link hồ sơ.
+- Customer Detail hiển thị profile read-only, trạng thái email verification và sổ địa chỉ.
+- Customer Order History hiển thị mã đơn, ngày, status, tổng tiền và liên kết sang Admin Order Detail.
+- Không tạo form password, profile mutation, CRM pipeline, tagging, segmentation hoặc customer notes.
+
+## File frontend
+
+- Tạo `frontend/src/pages/admin/CustomerListPage.tsx`.
+- Tạo `frontend/src/pages/admin/CustomerDetailPage.tsx`.
+- Tạo `frontend/src/pages/admin/customer-management.css`.
+- Tạo `frontend/src/services/admin/customers.ts`.
+- Tạo `frontend/src/types/admin-customer.ts`.
+- Sửa `frontend/src/routes/AppRoutes.tsx` và `frontend/src/layouts/admin/AdminSidebar.tsx`.
+
+## File backend
+
+- Backend list/search/detail/order history hiện có đáp ứng Phase 5 nên không sửa AdminController hoặc schema.
+- Sửa `backend/app/Http/Requests/AdminCustomerUpdateRequest.php` để cấm field `password`.
+- Mở rộng `backend/tests/Feature/AdminSystemApiTest.php` cho 401/403/404, search, history, hidden password và password protection.
+
+## Kiểm tra
+
+```text
+AuthApiTest + AdminSystemApiTest: 12/12 tests passed, 122 assertions
+npm.cmd run lint: passed
+npm.cmd run build: passed (Vite 8.1.4, 90 modules transformed)
+pint --test: passed
+```
+
+## Giới hạn sau Phase 5
+
+- Customer Detail trả toàn bộ order history hiện có trong một response; chưa có pagination riêng cho lịch sử của một customer.
+- Profile admin trong Phase 5 là read-only; route update name/email cũ vẫn tồn tại cho tương thích nhưng không được mở trên UI.
+- Không có CRM, customer notes, tags, segments, marketing consent workflow hoặc password reset từ Admin.
+
+Admin Phase 5 dừng tại Customer Management.
+
+# Admin Phase 6 – Coupon Management
+
+## Phạm vi
+
+Chỉ hoàn thiện Coupon Management frontend và kiểm chứng Coupon Admin APIs hiện có. Không tạo coupon engine, discount type, rule hoặc schema mới; không sửa customer checkout/coupon validation contract.
+
+## Contract sử dụng
+
+- `GET /api/admin/coupons`: danh sách phân trang, gồm `used_count` và `usages_count`.
+- `GET /api/admin/coupons/{coupon}`: detail và usage count hiện có.
+- `POST /api/admin/coupons`: tạo coupon theo `AdminCouponRequest`.
+- `PUT /api/admin/coupons/{coupon}`: edit hoặc enable/disable qua field `active`.
+- Frontend chỉ dùng hai type backend hiện có: `percent` và `fixed`.
+- Các field giữ nguyên: value, minimum amount, starts/expires at, global usage limit, per-user limit và active.
+
+## Hạng mục hoàn thành
+
+- Thêm protected route `/admin/coupons` và mở liên kết Mã giảm giá trong Admin Sidebar.
+- Coupon table responsive hiển thị code, type/value, minimum amount, thời hạn, per-user limit, global usage và trạng thái.
+- Form dùng chung cho create/edit, có validation frontend tương ứng `AdminCouponRequest` và map lỗi Laravel 422 theo field.
+- Enable/Disable dùng PUT với contract hiện có; không tạo endpoint hoặc status mới.
+- Usage Statistics hiển thị `used_count`, `usage_limit` và `usages_count` từ backend; frontend không tự tính hoặc ghi usage.
+- Không mở delete action trên UI vì mục tiêu Phase 6 chỉ yêu cầu create/edit/enable-disable/statistics.
+
+## File frontend
+
+- Tạo `frontend/src/pages/admin/CouponManagementPage.tsx`.
+- Tạo `frontend/src/pages/admin/coupon-management.css`.
+- Tạo `frontend/src/services/admin/coupons.ts`.
+- Tạo `frontend/src/types/admin-coupon.ts`.
+- Sửa `frontend/src/routes/AppRoutes.tsx` và `frontend/src/layouts/admin/AdminSidebar.tsx`.
+
+## Backend
+
+- Coupon controller, model, requests, service, routes và schema hiện có đáp ứng Phase 6 nên không sửa coupon engine/API source.
+- Mở rộng `backend/tests/Feature/AdminSystemApiTest.php` để kiểm tra list statistics, disable/enable, validation, hard-delete coupon chưa dùng và disable coupon đã có usage.
+- `CouponApiTest` tiếp tục xác nhận percent/fixed calculation, effective dates, minimum amount và usage limits của engine hiện có.
+
+## Kiểm tra
+
+```text
+CouponApiTest + AdminSystemApiTest: 10/10 tests passed, 121 assertions
+npm.cmd run lint: passed
+npm.cmd run build: passed (Vite 8.1.4, 93 modules transformed)
+pint --test: passed
+```
+
+## Giới hạn sau Phase 6
+
+- Chưa có search/filter coupon, usage detail theo từng customer/order hoặc export statistics.
+- Enable/Disable chỉ thay đổi `active`; không sửa, reset hoặc tự đồng bộ `used_count`.
+- Không có coupon stacking, product/category-specific discount, first-order rule hoặc engine mới.
+
+Admin Phase 6 dừng tại Coupon Management.
+
+# Admin Phase 7 – Content Management
+
+## Phạm vi
+
+Chỉ hoàn thiện Banner Management, Contact Management và Policy Management bằng models/schema nội dung hiện có. Không tạo CMS tổng quát, site-settings engine, rich block editor hoặc Page Builder; không sửa customer Homepage, Contact Page hoặc Policy Page trong Phase 7.
+
+## Contract và mô hình nội dung
+
+- Banner dùng nguyên fields `title`, `image`, `link`, `position`, `active`; không đổi schema.
+- `position=0` được UI đặt tên Homepage Banner, `position=1` là Collection Banner; backend validation chỉ nhận hai slot này cho Admin Phase 7.
+- Contact Management đọc contact submissions hiện có gồm name, email, phone, subject, message, status; không thêm CRM status/workflow.
+- Policy dùng nguyên fields `title`, `slug`, `content`, `version`, `published`; editor là textarea thuần văn bản.
+- Public `/api/banners` vẫn chỉ trả active records theo position; public `/api/policies*` vẫn chỉ trả published records.
+
+## Hạng mục hoàn thành
+
+- Thêm protected routes `/admin/content/banners`, `/admin/content/contacts`, `/admin/content/policies` và liên kết trong Admin Sidebar.
+- Banner Management hỗ trợ list, create/edit, chọn Homepage/Collection slot và show/hide.
+- Contact Management hỗ trợ list phân trang và xem chi tiết thông tin/lời nhắn khách gửi, chỉ đọc.
+- Policy Management hỗ trợ list, create/edit, version và publish/unpublish.
+- Validation frontend map lỗi Laravel 422; backend dùng hai FormRequest nhỏ cho Banner/Policy.
+- Không thêm delete UI, media library, WYSIWYG, blocks, layouts, SEO fields hoặc revision engine.
+
+## File frontend
+
+- Tạo `frontend/src/pages/admin/BannerManagementPage.tsx`.
+- Tạo `frontend/src/pages/admin/ContactManagementPage.tsx`.
+- Tạo `frontend/src/pages/admin/PolicyManagementPage.tsx`.
+- Tạo `frontend/src/pages/admin/content-management.css`.
+- Tạo `frontend/src/services/admin/content.ts`.
+- Tạo `frontend/src/types/admin-content.ts`.
+- Sửa `frontend/src/routes/AppRoutes.tsx` và `frontend/src/layouts/admin/AdminSidebar.tsx`.
+
+## File backend
+
+- Tạo `backend/app/Http/Requests/AdminBannerRequest.php` và `AdminPolicyRequest.php`.
+- Thêm Admin APIs tối thiểu cho Banner list/create/update, Contact list/detail và Policy list/create/update trong `AdminController`/`routes/api.php`.
+- Không sửa models, migration hoặc public content API response contracts.
+- Tạo `backend/tests/Feature/ContentAdminApiTest.php` cho authorization, slots, validation, public active/published visibility và contact read-only.
+
+## Kiểm tra
+
+```text
+ContentAdminApiTest + PhaseTwoApiTest: 10/10 tests passed, 74 assertions
+npm.cmd run lint: passed
+npm.cmd run build: passed (Vite 8.1.4, 98 modules transformed)
+pint --test: passed
+```
+
+## Giới hạn sau Phase 7
+
+- Customer Homepage hiện chưa gọi Banner API; Phase 7 chỉ hoàn thiện Admin records/API, không sửa Homepage ngoài phạm vi.
+- Customer PolicyPage vẫn dùng policy content tĩnh frontend dù backend public Policy API và Admin Policy Management đã có.
+- Contact Management là inbox read-only của contact form; địa chỉ/điện thoại/giờ mở cửa trên customer Contact Page/Footer vẫn là nội dung tĩnh, không có site-settings model.
+- Banner image dùng URL/path text hiện có; chưa có upload/media library riêng.
+
+Admin Phase 7 dừng tại Content Management.
+
+# Admin Phase 8 – Dashboard
+
+## Phạm vi
+
+Chỉ hoàn thiện Dashboard Page và Statistics API hiện có. Không sửa các trang quản trị khác, không query database từ frontend và không thêm charting library hoặc biểu đồ khi backend chưa có chuỗi dữ liệu theo thời gian.
+
+## Contract thống kê
+
+- Giữ nguyên `GET /api/admin/dashboard` cùng các fields hiện có: `revenue`, `orders`, `orders_by_status`, `customers`, `products`, `published_products`, `low_stock_products`, `active_coupons`.
+- Bổ sung `best_sellers` gồm `product_id`, `name`, `sku`, `quantity_sold`, `revenue`.
+- `revenue` và Best Sellers chỉ tính các đơn có `payment_status=paid`; Best Sellers tổng hợp từ snapshot `order_items`, sắp xếp theo số lượng bán rồi doanh thu và giới hạn 5 sản phẩm.
+- API tiếp tục được bảo vệ bởi `auth:sanctum` và middleware `admin` hiện có.
+
+## Hạng mục hoàn thành
+
+- Route `/admin` render Dashboard thay cho vùng foundation trống.
+- Bốn KPI hiển thị Revenue, Orders, Customers và Products bằng dữ liệu Statistics API.
+- Bảng Best Sellers hiển thị thứ hạng, tên sản phẩm, SKU, số lượng bán và doanh thu; có empty, loading, error và retry states.
+- Dashboard responsive 4/2/1 cột, không thêm biểu đồ hoặc dependency mới.
+- Sidebar đổi nhãn route gốc thành `Tổng quan` và giữ nguyên các module quản trị khác.
+
+## File thay đổi
+
+- Backend: `backend/app/Http/Controllers/Api/AdminController.php`, `backend/tests/Feature/AdminSystemApiTest.php`.
+- Frontend: `frontend/src/pages/admin/DashboardPage.tsx`, `frontend/src/pages/admin/dashboard.css`, `frontend/src/services/admin/dashboard.ts`, `frontend/src/types/admin-dashboard.ts`.
+- Routing/navigation: `frontend/src/routes/AppRoutes.tsx`, `frontend/src/layouts/admin/AdminSidebar.tsx`.
+
+## Kiểm tra
+
+```text
+AdminSystemApiTest: 6/6 tests passed, 113 assertions
+pint --test: passed
+npm.cmd run lint: passed
+npm.cmd run build: passed (Vite 8.1.4, 101 modules transformed)
+```
+
+## Giới hạn sau Phase 8
+
+- Chưa có thống kê theo ngày/tháng hoặc dữ liệu time-series, nên Dashboard không hiển thị biểu đồ xu hướng.
+- Best Sellers dùng snapshot tên/SKU trong order item để vẫn hiển thị đúng lịch sử khi sản phẩm thay đổi hoặc bị xóa.
+- Statistics API chưa có cache; phạm vi hiện tại phù hợp dashboard tối thiểu và chưa thêm cơ chế cache mới.
+
+Admin Phase 8 dừng tại Dashboard.
+
+# Admin Phase 9 – Settings
+
+## Phạm vi
+
+Chỉ hoàn thiện Settings Page và Settings APIs cho Shop Information, Bank Account, Shipping Configuration, Social Links và SEO Defaults. Không tạo CMS/site builder, không sửa customer pages và không hard-code giá trị cấu hình cửa hàng trong frontend.
+
+## Contract và lưu trữ
+
+- `GET /api/admin/settings`: trả năm nhóm cấu hình dưới `data`.
+- `PUT /api/admin/settings`: validate và lưu đồng thời năm nhóm trong transaction.
+- Shop/Bank/Social/SEO được lưu trong singleton `store_settings` với bốn JSON fields có cấu trúc cố định.
+- Shipping Configuration tái sử dụng bảng/model `shipping_methods`; phương thức không còn trong payload đầy đủ được chuyển inactive thay vì xóa để giữ lịch sử order.
+- Settings APIs tiếp tục dùng Sanctum + middleware `admin`; customer nhận 403 và unauthenticated nhận 401.
+
+## Hạng mục hoàn thành
+
+- Thêm protected route `/admin/settings` và liên kết `Cài đặt` trong Admin Sidebar.
+- Settings Page có năm section responsive, loading/error/retry/save states và validation frontend/backend.
+- Shipping Methods hỗ trợ thêm mới, chỉnh tên/phí/ngưỡng miễn phí và Active/Inactive; code của record đã lưu được giữ ổn định.
+- Bank Account settings được `PaymentService` dùng khi tạo metadata cho đơn chuyển khoản mới; config environment hiện có là fallback trước khi settings record tồn tại.
+- Shipping settings tiếp tục được customer shipping quote/checkout flow hiện có sử dụng qua `shipping_methods`.
+- Social Links và SEO Defaults được lưu tập trung cho backend consumption; Phase 9 không sửa customer Footer hoặc metadata rendering ngoài phạm vi.
+
+## File frontend
+
+- Tạo `frontend/src/pages/admin/SettingsPage.tsx` và `frontend/src/pages/admin/settings.css`.
+- Tạo `frontend/src/services/admin/settings.ts` và `frontend/src/types/admin-settings.ts`.
+- Sửa `frontend/src/routes/AppRoutes.tsx` và `frontend/src/layouts/admin/AdminSidebar.tsx`.
+
+## File backend
+
+- Tạo `backend/app/Http/Controllers/Api/AdminSettingsController.php`.
+- Tạo `backend/app/Http/Requests/AdminSettingsRequest.php`.
+- Tạo `backend/app/Models/StoreSetting.php`.
+- Tạo migration `backend/database/migrations/2026_07_15_000002_create_store_settings_table.php`.
+- Tạo `backend/tests/Feature/SettingsApiTest.php`.
+- Sửa `backend/routes/api.php` và `backend/app/Services/PaymentService.php`.
+
+## Kiểm tra
+
+```text
+SettingsApiTest: 4/4 tests passed, 32 assertions
+SettingsApiTest + PaymentApiTest + PhaseTwoApiTest: 12/12 tests passed, 82 assertions
+pint --test: passed
+npm.cmd run lint: passed
+npm.cmd run build: passed (Vite 8.1.4, 104 modules transformed)
+artisan migrate --no-interaction: passed; store_settings migration applied locally
+```
+
+## Giới hạn sau Phase 9
+
+- Social Links và SEO Defaults đã có nguồn cấu hình backend nhưng customer Footer/head metadata chưa consume vì không thuộc phạm vi Settings Admin.
+- Thay đổi Bank Account chỉ áp dụng cho payment metadata được tạo sau khi lưu; order/payment cũ giữ snapshot cũ.
+- Settings chưa có audit history, draft, versioning hoặc cache; Phase 9 chỉ cung cấp cấu hình cấu trúc cố định tối thiểu.
+- Các môi trường triển khai khác phải chạy `php artisan migrate` để tạo bảng `store_settings`.
+
+Admin Phase 9 dừng tại Settings.
+
+# Admin Final Audit
+
+## Kết quả
+
+- Audit toàn bộ Admin Auth, Product, Category, Order, Customer, Coupon, Content, Dashboard và Settings; không tạo tính năng mới.
+- Xác nhận 33 `/api/admin/*` routes đều nằm sau `auth:sanctum` và `EnsureAdmin`.
+- Xác nhận frontend Admin routes đều nằm sau `ProtectedAdminRoute`; responsive CSS có breakpoints và overflow wrappers cho layout/table chính.
+- Backend full suite passed 60/60 tests, 402 assertions.
+- Frontend lint passed; build passed với Vite 8.1.4, 104 modules transformed.
+- Tạo báo cáo chi tiết tại `docs/admin-final-audit.md`.
+
+## Quyết định
+
+- Staging: Go, nhưng browser E2E/manual accessibility chưa được xác minh trong lượt audit vì không có in-app browser khả dụng.
+- Production: No-Go cho tới khi sửa deployment storage cho Product Image Management. Docker chưa chạy `storage:link` và Render chưa có persistent disk/object storage, nên ảnh upload có thể 404 hoặc mất sau restart/redeploy.
+- Các finding tiếp theo: Sanctum token chưa expiration và lưu localStorage; `staff` có toàn quyền như `admin`; chưa có admin audit log; modal/table/form accessibility và access-matrix/E2E tests còn thiếu.
+
+Admin Final Audit dừng tại báo cáo và không thay đổi tính năng.
+
+# Admin Access UX – Phase 1–3
+
+## Phase 1 – Backend Access Contract
+
+- Thêm `GET /api/admin/access` làm access probe nhẹ, thay cho việc dùng HEAD Dashboard để kiểm tra quyền.
+- Endpoint nằm trong `auth:sanctum` + `EnsureAdmin`; không trả role, customer data hoặc statistics.
+- Authorization tests xác nhận unauthenticated 401, customer 403, admin/staff 200.
+
+## Phase 2 – Frontend Admin Switch
+
+- Login/register đưa token và user vào Auth Context ngay sau khi thành công; không cần đăng nhập hoặc reload lần hai.
+- Header khôi phục session qua `/api/me` khi reload và gọi access probe bằng bearer token.
+- Admin/staff thấy nút `Vào quản trị` ở Header desktop và mobile menu; customer không thấy.
+- Account icon chuyển tới `/tai-khoan` khi đã đăng nhập; khi chưa đăng nhập vẫn chuyển `/dang-nhap`.
+- Profile logout dùng Auth Context chung để thu hồi token và ẩn nút Admin ngay, không để session UI cũ.
+- Không lưu role/admin flag trong localStorage và không thay đổi customer login response contract.
+
+## Phase 3 – Verification
+
+```text
+AdminSystemApiTest: 6/6 tests passed, 119 assertions
+php artisan test: 60/60 tests passed, 408 assertions
+pint --test: passed
+npm.cmd run lint: passed
+npm.cmd run build: passed (Vite 8.1.4, 104 modules transformed)
+route audit: 34 Admin routes; /api/admin/access có auth:sanctum + EnsureAdmin
+```
+
+Admin Access UX dừng sau Phase 3. Product image storage production blocker trong Admin Final Audit không thay đổi.

@@ -15,6 +15,8 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 export interface AdminOrderItem {
   id: number
   productId?: number
+  colorName?: string
+  variantId?: number
   productName: string
   productSku?: string
   quantity: number

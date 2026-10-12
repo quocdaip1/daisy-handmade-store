@@ -24,7 +24,7 @@ class CartController extends Controller
     {
         $data = $request->validated();
 
-        return new CartResource($this->cart->add($request->user(), $data['product_id'], $data['quantity']));
+        return new CartResource($this->cart->add($request->user(), $data['product_id'], $data['quantity'], $data['variant_id'] ?? null));
     }
 
     public function update(UpdateCartItemRequest $request, CartItem $cartItem): CartResource

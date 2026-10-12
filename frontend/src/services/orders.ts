@@ -9,7 +9,7 @@ export interface CheckoutAddress {
 }
 
 export interface CheckoutPreviewPayload {
-  items: Array<{ product_id: number; quantity: number }>
+  items: Array<{ product_id: number; variant_id?: number | null; color_name?: string | null; quantity: number }>
   address: CheckoutAddress
   customer_email: string
   note?: string
@@ -18,7 +18,7 @@ export interface CheckoutPreviewPayload {
 }
 
 export interface CheckoutPreview {
-  items: Array<{ product_id: number; name: string; quantity: number; unit_price: number; line_total: number }>
+  items: Array<{ product_id: number; variant_id?: number | null; color_name?: string | null; name: string; quantity: number; unit_price: number; line_total: number }>
   address: CheckoutAddress
   success: true
   preview_id: string
@@ -33,7 +33,7 @@ export interface CheckoutPreview {
 
 export interface CreateOrderPayload {
   preview_id: string
-  items: Array<{ product_id: number; quantity: number }>
+  items: Array<{ product_id: number; variant_id?: number | null; color_name?: string | null; quantity: number }>
   customer_name: string
   customer_email: string
   customer_phone: string
@@ -63,7 +63,7 @@ export interface CreateOrderResponse {
     customer_phone: string
     shipping_address: string
     total: number
-    items: Array<{ product_id: number; quantity: number; price: number }>
+    items: Array<{ product_id: number; variant_id?: number | null; color_name?: string | null; quantity: number; price: number }>
   }
   payment: OrderPayment
 }

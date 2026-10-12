@@ -34,8 +34,8 @@ class CheckoutPreviewRequest extends FormRequest
             'shipping_method_id' => ['prohibited'],
             'coupon_code' => ['nullable', 'string', 'max:50'],
             'items' => ['nullable', 'array', 'min:1', 'max:50'],
-            'items.*.product_id' => ['required_with:items', 'integer', 'distinct'],
-            'items.*.quantity' => ['required_with:items', 'integer', 'min:1', 'max:1000'],
+            'items.*.product_id' => ['required_with:items', 'integer'],
+            'items.*.variant_id' => ['nullable', 'integer'], 'items.*.quantity' => ['required_with:items', 'integer', 'min:1', 'max:1000'],
         ];
     }
 }

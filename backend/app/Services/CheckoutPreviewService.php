@@ -13,7 +13,7 @@ class CheckoutPreviewService
 {
     private const EXPIRY_MINUTES = 15;
 
-    public function __construct(private readonly CouponService $coupons) {}
+    public function __construct(private readonly CouponService $coupons, private readonly ProductInventoryService $inventory) {}
 
     public function preview(User $user, array $data): array
     {
@@ -21,7 +21,7 @@ class CheckoutPreviewService
         $address = $this->address($user, $data);
         $items = ! empty($data['items'])
             ? collect($data['items'])
-            : $user->cartItems()->orderBy('id')->get(['product_id', 'quantity']);
+            : $user->cartItems()->orderBy('id')->get(['product_id', 'variant_id', 'quantity']);
         $pricing = $this->calculate($user, $items, $data['coupon_code'] ?? null);
         $payloadHash = $this->payloadHash([
             'items' => $items->all(),
@@ -86,10 +86,12 @@ class CheckoutPreviewService
             throw ValidationException::withMessages(['cart' => 'Giỏ hàng đang trống.']);
         }
 
-        $query = Product::query()->whereIn('id', $requestedItems->pluck('product_id'));
+        $query = Product::query()->whereIn('id', $requestedItems->pluck('product_id'))->orderBy('id');
         $products = ($lock ? $query->lockForUpdate() : $query)->get()->keyBy('id');
         $items = [];
         $subtotal = 0;
+        $seen = [];
+        $requestedStock = [];
 
         foreach ($requestedItems as $requestedItem) {
             $item = is_array($requestedItem) ? $requestedItem : $requestedItem->toArray();
@@ -99,16 +101,23 @@ class CheckoutPreviewService
                     'cart' => 'Một sản phẩm trong giỏ không còn tồn tại hoặc đã ngừng bán. Vui lòng kiểm tra lại giỏ hàng.',
                 ]);
             }
-            if ($item['quantity'] > $product->stock) {
-                throw ValidationException::withMessages([
-                    'cart' => 'Một sản phẩm trong giỏ hàng hiện không đủ số lượng. Vui lòng kiểm tra lại giỏ hàng.',
-                ]);
+            $variantId = isset($item['variant_id']) ? (int) $item['variant_id'] : null;
+            $key = $product->id.':'.($variantId ?? 'shared');
+            if (isset($seen[$key])) {
+                throw ValidationException::withMessages(['cart' => 'Không được lặp dòng sản phẩm và màu.']);
             }
+            $seen[$key] = true;
+            $selection = $this->inventory->selection($product, $variantId, $lock);
+            $pool = $product->id.':'.($selection['source'] === 'variant' ? $variantId : 'shared');
+            $requestedStock[$pool] = ($requestedStock[$pool] ?? 0) + $item['quantity'];
+            $this->inventory->ensureAvailable($product, $selection, $requestedStock[$pool]);
 
             $lineTotal = $product->price * $item['quantity'];
             $subtotal += $lineTotal;
             $items[] = [
                 'product_id' => $product->id,
+                'variant_id' => $variantId,
+                'color_name' => $selection['variant']?->color_name,
                 'name' => $product->name,
                 'quantity' => $item['quantity'],
                 'unit_price' => $product->price,
@@ -142,8 +151,9 @@ class CheckoutPreviewService
     {
         $items = collect($data['items'])->map(fn ($item) => [
             'product_id' => (int) $item['product_id'],
+            'variant_id' => isset($item['variant_id']) ? (int) $item['variant_id'] : null,
             'quantity' => (int) $item['quantity'],
-        ])->sortBy('product_id')->values()->all();
+        ])->sortBy(fn ($item) => sprintf('%020d:%020d', $item['product_id'], $item['variant_id'] ?? 0))->values()->all();
 
         return hash('sha256', json_encode([
             'items' => $items,
